@@ -1,0 +1,1 @@
+{"builder": {"gc": {"defaultKeepStorage": "20GB", "enabled": true}}, "experimental": false, "registry-mirrors": ["https://docker.1ms.run", "https://docker.xuanyuan.me"], "proxies": {"default": {"httpProxy": "http://127.0.0.1:7897", "httpsProxy": "http://127.0.0.1:7897", "noProxy": "localhost,127.0.0.1"}}}

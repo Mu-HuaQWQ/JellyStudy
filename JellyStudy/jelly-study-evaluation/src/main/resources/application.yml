@@ -1,0 +1,52 @@
+server:
+  port: 8089
+
+spring:
+  config:
+    import: "optional:configserver:"
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: jellystudy_evaluation
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 10
+  application:
+    name: jelly-study-evaluation
+  zipkin:
+    base-url: http://localhost:9411
+  sleuth:
+    sampler:
+      probability: 1.0
+
+ai:
+  deepseek:
+    api-key: sk-d213e134c21742009b70ad74189d7340
+    base-url: https://api.deepseek.com
+    model: deepseek-chat
+
+dubbo:
+  application:
+    name: jelly-study-evaluation
+  registry:
+    address: nacos://${NACOS_ADDR:host.docker.internal:8848}
+  protocol:
+    name: dubbo
+    port: 20881
+  provider:
+    timeout: 30000
+
+logging:
+  level:
+    com.jellystudy: debug
+    org.apache.dubbo: info

@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JellyStudy - 问答学习平台</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">JellyStudy</div>
+            <nav>
+                <a href="#" class="active" data-page="home">首页</a>
+                <a href="#" data-page="questions">问题列表</a>
+                <a href="#" data-page="knowledge">知识点</a>
+                <a href="#" data-page="hot">热门问题</a>
+                <a href="#" data-page="redis" style="color: #e74c3c; font-weight: bold;">⚡ Redis数据</a>
+                <a href="#" data-page="notifications" id="nav-notifications">
+                    🔔 通知
+                    <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                </a>
+                <a href="#" data-page="messages" id="nav-messages">
+                    💬 私信
+                    <span class="message-badge" id="messageBadge" style="display: none;">0</span>
+                </a>
+            </nav>
+            <div class="user-info">
+                <span id="currentUser">用户: user001</span>
+                <button class="btn-small" onclick="showUserModal()">切换用户</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- 首页 -->
+        <section id="home-page" class="page active">
+            <div class="hero">
+                <h1>欢迎来到 JellyStudy</h1>
+                <p>在这里你可以提问、回答、分享知识</p>
+                <button class="btn-primary" onclick="showAskQuestion()">我要提问</button>
+            </div>
+            <div class="stats">
+                <div class="stat-card">
+                    <h3 id="questionCount">0</h3>
+                    <p>问题总数</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="hotQuestionCount">0</h3>
+                    <p>热门问题</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="knowledgeCount">0</h3>
+                    <p>知识点</p>
+                </div>
+            </div>
+            <div class="section">
+                <h2>推荐问题</h2>
+                <div id="recommendQuestions" class="question-list"></div>
+            </div>
+        </section>
+
+        <!-- 问题列表页 -->
+        <section id="questions-page" class="page">
+            <div class="page-header">
+                <h2>所有问题</h2>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="搜索问题...">
+                    <button class="btn-secondary" onclick="searchQuestions()">搜索</button>
+                </div>
+            </div>
+            <div id="allQuestions" class="question-list"></div>
+            <div class="pagination" id="pagination"></div>
+        </section>
+
+        <!-- 知识点页 -->
+        <section id="knowledge-page" class="page">
+            <div class="page-header">
+                <h2>知识点</h2>
+                <button class="btn-primary" onclick="showAddKnowledge()">添加知识点</button>
+            </div>
+            <div id="knowledgeList" class="knowledge-grid"></div>
+        </section>
+
+        <!-- 热门问题页 -->
+        <section id="hot-page" class="page">
+            <h2>热门问题</h2>
+            <div id="hotQuestions" class="question-list"></div>
+        </section>
+
+        <!-- Redis 数据页 -->
+        <section id="redis-page" class="page">
+            <h2 style="color: #e74c3c;">⚡ Redis 实时数据面板</h2>
+
+            <!-- 统计卡片 -->
+            <div class="redis-stats">
+                <div class="redis-stat-card" style="border-left: 4px solid #3498db;">
+                    <h3 id="onlineUserCount">--</h3>
+                    <p>👥 在线用户</p>
+                    <small>实时统计</small>
+                </div>
+                <div class="redis-stat-card" style="border-left: 4px solid #2ecc71;">
+                    <h3 id="cachedQuestionsCount">--</h3>
+                    <p>🔥 缓存问题数</p>
+                    <small>Redis 缓存</small>
+                </div>
+                <div class="redis-stat-card" style="border-left: 4px solid #f39c12;">
+                    <h3 id="rankingCount">--</h3>
+                    <p>🏆 排行榜问题</p>
+                    <small>最受欢迎</small>
+                </div>
+            </div>
+
+            <div class="redis-content-grid">
+                <!-- 左侧：排行榜 -->
+                <div class="redis-panel">
+                    <div class="panel-header">
+                        <h3>🏆 最受欢迎问题 Top 10</h3>
+                        <button class="btn-small btn-primary" onclick="refreshPopularRanking()">刷新</button>
+                    </div>
+                    <div id="popularRankingList" class="ranking-list">
+                        <p class="loading-text">加载中...</p>
+                    </div>
+                </div>
+
+                <!-- 右侧：用户活跃度 -->
+                <div class="redis-panel">
+                    <div class="panel-header">
+                        <h3>⭐ 活跃用户 Top 10</h3>
+                        <button class="btn-small btn-primary" onclick="refreshActiveUsers()">刷新</button>
+                    </div>
+                    <div id="activeUsersList" class="user-list">
+                        <p class="loading-text">加载中...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 热门缓存列表 -->
+            <div class="redis-panel" style="margin-top: 20px;">
+                <div class="panel-header">
+                    <h3>🔥 高频访问问题（Redis 缓存）</h3>
+                    <div>
+                        <button class="btn-small btn-secondary" onclick="syncHotViewedCache()">同步缓存</button>
+                        <button class="btn-small btn-primary" onclick="refreshHotViewedList()">刷新</button>
+                    </div>
+                </div>
+                <div id="hotViewedQuestionsList" class="question-list">
+                    <p class="loading-text">加载中...</p>
+                </div>
+            </div>
+
+            <!-- 用户活动记录 -->
+            <div class="redis-panel" style="margin-top: 20px;">
+                <div class="panel-header">
+                    <h3>📝 我的最近活动</h3>
+                    <div>
+                        <button class="btn-small btn-secondary" onclick="recordMyActivity('VIEW')">模拟浏览</button>
+                        <button class="btn-small btn-primary" onclick="refreshMyActivity()">刷新</button>
+                    </div>
+                </div>
+                <div id="myActivityList" class="activity-list">
+                    <p class="loading-text">加载中...</p>
+                </div>
+            </div>
+
+            <!-- 操作按钮区 -->
+            <div class="redis-actions" style="margin-top: 20px; text-align: center;">
+                <button class="btn-primary" onclick="markMeOnline()">🟢 标记我在线</button>
+                <button class="btn-secondary" onclick="syncAllRedisData()">🔄 全量同步数据</button>
+            </div>
+        </section>
+
+        <!-- 通知中心页 -->
+        <section id="notifications-page" class="page">
+            <div class="page-header">
+                <h2>📬 通知中心</h2>
+                <div class="notification-actions">
+                    <span class="unread-count-display" id="totalUnreadCount">未读: 0 条</span>
+                    <button class="btn-primary btn-small" onclick="markAllNotificationsRead()">✅ 全部已读</button>
+                    <button class="btn-secondary btn-small" onclick="loadNotifications()">🔄 刷新</button>
+                </div>
+            </div>
+
+            <!-- 通知统计 -->
+            <div class="notification-stats">
+                <div class="stat-card">
+                    <h3 id="statTotal">0</h3>
+                    <p>总通知数</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="statUnread" style="color: #e74c3c;">0</h3>
+                    <p>未读通知</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="statRead" style="color: #28a745;">0</h3>
+                    <p>已读通知</p>
+                </div>
+            </div>
+
+            <!-- 通知列表 -->
+            <div id="notificationList" class="notification-list-container">
+                <p class="loading-text">加载中...</p>
+            </div>
+
+            <!-- 分页 -->
+            <div class="pagination" id="notificationPagination"></div>
+        </section>
+
+        <!-- 私信页面 -->
+        <section id="messages-page" class="page">
+            <div class="message-system">
+                <!-- 左侧：联系人列表 -->
+                <div class="contact-sidebar">
+                    <div class="contact-header">
+                        <h2>💬 私信</h2>
+                        <button class="btn-primary btn-small" onclick="showSendMessageModal()">✏️ 发消息</button>
+                    </div>
+                    <div class="contact-search">
+                        <input type="text" id="contactSearchInput" placeholder="搜索联系人..." oninput="searchContacts()">
+                    </div>
+                    <div id="contactList" class="contact-list">
+                        <p class="loading-text">加载中...</p>
+                    </div>
+                </div>
+
+                <!-- 右侧：聊天窗口 -->
+                <div class="chat-window" id="chatWindow">
+                    <div class="chat-empty-state" id="chatEmptyState">
+                        <div class="empty-icon">💬</div>
+                        <h3>选择一个会话开始聊天</h3>
+                        <p>从左侧列表选择联系人，或点击"发消息"开始新对话</p>
+                    </div>
+
+                    <div class="chat-active" id="chatActive" style="display: none;">
+                        <!-- 聊天头部 -->
+                        <div class="chat-header">
+                            <h3 id="chatContactName">联系人名称</h3>
+                            <button class="btn-small btn-secondary" onclick="markConversationAsRead()">标记已读</button>
+                        </div>
+
+                        <!-- 消息列表 -->
+                        <div class="messages-container" id="messagesContainer">
+                            <p class="loading-text">加载消息中...</p>
+                        </div>
+
+                        <!-- 输入区域 -->
+                        <div class="message-input-area">
+                            <textarea id="messageInput" placeholder="输入消息..." rows="2"></textarea>
+                            <button class="btn-primary" onclick="sendMessage()">发送</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 问题详情页 -->
+        <section id="detail-page" class="page">
+            <button class="btn-back" onclick="showPage('home')">返回</button>
+            <div id="questionDetail"></div>
+        </section>
+
+        <!-- 提问弹窗 -->
+        <div id="askModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal('askModal')">&times;</span>
+                <h2>提问</h2>
+                <form id="askForm">
+                    <div class="form-group">
+                        <label>标题</label>
+                        <input type="text" id="questionTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label>内容</label>
+                        <textarea id="questionContent" rows="5" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>知识点（可选，不选择则由AI自动提取）</label>
+                        <select id="questionKnowledgePoint"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>标签（逗号分隔）</label>
+                        <input type="text" id="questionTags" placeholder="Java, Spring, MongoDB">
+                    </div>
+                    <button type="submit" class="btn-primary">提交问题</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 回答弹窗 -->
+        <div id="answerModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal('answerModal')">&times;</span>
+                <h2>回答问题</h2>
+                <form id="answerForm">
+                    <input type="hidden" id="answerQuestionId">
+                    <div class="form-group">
+                        <label>回答内容</label>
+                        <textarea id="answerContent" rows="5" required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary">提交回答</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 评论弹窗 -->
+        <div id="commentModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal('commentModal')">&times;</span>
+                <h2>发表评论</h2>
+                <form id="commentForm">
+                    <input type="hidden" id="commentTargetId">
+                    <input type="hidden" id="commentType">
+                    <div class="form-group">
+                        <label>评论内容</label>
+                        <textarea id="commentContent" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary">提交评论</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 添加知识点弹窗 -->
+        <div id="knowledgeModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal('knowledgeModal')">&times;</span>
+                <h2>添加知识点</h2>
+                <form id="knowledgeForm">
+                    <div class="form-group">
+                        <label>标题</label>
+                        <input type="text" id="knowledgeTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label>内容</label>
+                        <textarea id="knowledgeContent" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>分类</label>
+                        <input type="text" id="knowledgeCategory" required>
+                    </div>
+                    <div class="form-group">
+                        <label>标签（逗号分隔）</label>
+                        <input type="text" id="knowledgeTags" placeholder="重要, 基础">
+                    </div>
+                    <div class="form-group">
+                        <label>难度</label>
+                        <select id="knowledgeDifficulty">
+                            <option value="简单">简单</option>
+                            <option value="中等">中等</option>
+                            <option value="困难">困难</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary">提交</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 用户弹窗 -->
+        <div id="userModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal('userModal')">&times;</span>
+                <h2>用户管理</h2>
+                <div class="user-section">
+                    <h3>选择用户</h3>
+                    <select id="userSelect" onchange="switchUser()">
+                        <option value="">-- 选择用户 --</option>
+                    </select>
+                </div>
+                <hr>
+                <div class="user-section">
+                    <h3>创建新用户</h3>
+                    <form id="createUserForm">
+                        <div class="form-group">
+                            <label>用户名</label>
+                            <input type="text" id="newUsername" required>
+                        </div>
+                        <div class="form-group">
+                            <label>昵称</label>
+                            <input type="text" id="newNickname" required>
+                        </div>
+                        <div class="form-group">
+                            <label>密码</label>
+                            <input type="password" id="newPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label>邮箱</label>
+                            <input type="email" id="newEmail">
+                        </div>
+                        <button type="submit" class="btn-primary">创建用户</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 发送消息弹窗 -->
+        <div id="sendMessageModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal('sendMessageModal')">&times;</span>
+                <h2>✏️ 发送私信</h2>
+                <form id="sendMessageForm" onsubmit="handleSendMessage(event)">
+                    <div class="form-group">
+                        <label>选择接收人</label>
+                        <select id="messageReceiverSelect" required>
+                            <option value="">-- 选择联系人 --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>消息内容</label>
+                        <textarea id="messageContentInput" rows="4" placeholder="输入消息内容..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary">发送</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 JellyStudy. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/app.js?v=8"></script>
+</body>
+</html>
