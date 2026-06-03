@@ -18,20 +18,51 @@ function initApp() {
 }
 
 function updateUserDisplay() {
-    document.getElementById('currentUser').textContent = `用户: ${currentUserName}`;
+    const el = document.getElementById('sidebarUserName');
+    if (el) el.textContent = currentUserName;
 }
 
 function setupNavigation() {
-    const navLinks = document.querySelectorAll('nav a');
-    navLinks.forEach(link => {
+    // Sidebar navigation
+    document.querySelectorAll('.sidebar-link').forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             const page = this.dataset.page;
             showPage(page);
-            
-            navLinks.forEach(l => l.classList.remove('active'));
-            this.classList.add('active');
         });
+    });
+
+    // Mobile bottom nav
+    document.querySelectorAll('.mobile-nav-item').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const page = this.dataset.page;
+            showPage(page);
+        });
+    });
+
+    // Hamburger toggle
+    const hamburger = document.getElementById('hamburgerBtn');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (hamburger && sidebar && overlay) {
+        hamburger.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        });
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+        });
+    }
+}
+
+function updateNavActive(pageName) {
+    document.querySelectorAll('.sidebar-link').forEach(l => {
+        l.classList.toggle('active', l.dataset.page === pageName);
+    });
+    document.querySelectorAll('.mobile-nav-item').forEach(l => {
+        l.classList.toggle('active', l.dataset.page === pageName);
     });
 }
 
@@ -46,12 +77,19 @@ function setupForms() {
 function showPage(pageName) {
     const pages = document.querySelectorAll('.page');
     pages.forEach(page => page.classList.remove('active'));
-    
+
     const targetPage = document.getElementById(`${pageName}-page`);
     if (targetPage) {
         targetPage.classList.add('active');
     }
-    
+
+    // Update active states on sidebar and mobile nav
+    updateNavActive(pageName);
+
+    // Close mobile sidebar after navigation
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('open');
+
     switch(pageName) {
         case 'home':
             loadHomeData();
@@ -68,7 +106,36 @@ function showPage(pageName) {
         case 'redis':
             loadRedisData();
             break;
+        case 'notifications':
+            notificationPage = 0;
+            loadNotifications();
+            break;
+        case 'messages':
+            loadContacts();
+            break;
     }
+}
+
+// Hero search
+function searchFromHero() {
+    const q = document.getElementById('heroSearchInput').value.trim();
+    if (q) {
+        document.getElementById('searchInput').value = q;
+        showPage('questions');
+        searchQuestions();
+    }
+}
+
+// Filter notifications by tab
+let currentNotificationFilter = 'all';
+function filterNotifications(filter) {
+    currentNotificationFilter = filter;
+    document.querySelectorAll('.notif-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.textContent.trim() ===
+            (filter === 'all' ? '全部' : filter === 'unread' ? '未读' : '已读'));
+    });
+    notificationPage = 0;
+    loadNotifications();
 }
 
 async function loadHomeData() {
@@ -143,11 +210,11 @@ function renderQuestions(questions, containerId) {
         <div class="question-card" onclick="viewQuestionDetail('${q.id}')">
             <h3>${escapeHtml(q.title)}</h3>
             <div class="question-meta">
-                <span>👤 ${q.authorName}</span>
-                <span>📁 ${q.knowledgePointTitle || '待AI分析'}</span>
-                <span>👁 ${q.viewCount} 次浏览</span>
-                <span>💬 ${q.answerCount || 0} 个回答</span>
-                <span>❤️ ${q.likeCount || 0} 赞</span>
+                <span>${q.authorName}</span>
+                <span>${q.knowledgePointTitle || '待AI分析'}</span>
+                <span>${q.viewCount} 次浏览</span>
+                <span>${q.answerCount || 0} 个回答</span>
+                <span>${q.likeCount || 0} 赞</span>
             </div>
         </div>
     `).join('');
@@ -208,53 +275,53 @@ function renderQuestionDetail(data) {
         <div class="detail-header">
             <h1>${escapeHtml(q.title)}</h1>
             <div class="detail-meta">
-                <span>👤 ${q.authorName}</span>
-                <span>📁 ${q.knowledgePointTitle || '待AI分析'}</span>
-                <span>👁 ${q.viewCount} 次浏览</span>
-                <span>💬 ${answers.length} 个回答</span>
-                <span>❤️ ${q.likeCount || 0} 赞</span>
-                <span>📅 ${formatDate(q.createTime)}</span>
+                <span>${q.authorName}</span>
+                <span>${q.knowledgePointTitle || '待AI分析'}</span>
+                <span>${q.viewCount} 次浏览</span>
+                <span>${answers.length} 个回答</span>
+                <span>${q.likeCount || 0} 赞</span>
+                <span>${formatDate(q.createTime)}</span>
             </div>
         </div>
-        
-        <div class="ai-evaluation-section" id="ai-evaluation-${q.id}" style="margin: 1rem 0; padding: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; color: white;">
-            <h3 style="margin: 0 0 0.5rem 0; display: flex; align-items: center; gap: 8px;">
-                🤖 AI 智能评估
-                <button class="btn-small" onclick="loadQuestionEvaluation('${q.id}')" style="background: white; color: #667eea;">🔄 刷新</button>
-            </h3>
-            <div id="evaluation-content-${q.id}" style="background: rgba(255,255,255,0.9); padding: 1rem; border-radius: 8px; color: #333;">
-                <p style="margin: 0; color: #666;">正在加载AI评估结果...</p>
+
+        <div class="ai-evaluation-section" id="ai-evaluation-${q.id}">
+            <div class="ai-eval-header">
+                <h3>AI 智能评估</h3>
+                <button class="btn-small btn-secondary" onclick="loadQuestionEvaluation('${q.id}')">刷新</button>
+            </div>
+            <div class="ai-eval-body" id="evaluation-content-${q.id}">
+                <p>正在加载AI评估结果...</p>
             </div>
         </div>
-        
+
         <div class="detail-content">${escapeHtml(q.content)}</div>
-        
+
         <div class="question-tags">
             ${(q.tags || []).map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
         </div>
-        
+
         <div class="detail-actions">
             <button class="action-btn ${isLiked(q) ? 'liked' : ''}" onclick="toggleLikeQuestion('${q.id}')">
-                ${isLiked(q) ? '❤️' : '🤍'} ${q.likeCount || 0}
+                <span class="act-icon act-like"></span> ${q.likeCount || 0}
             </button>
             <button class="action-btn" onclick="openAnswerModal('${q.id}')">
-                💬 回答
+                <span class="act-icon act-answer"></span> 回答
             </button>
             <button class="action-btn" onclick="openCommentModal('${q.id}', 'QUESTION')">
-                📝 评论
+                <span class="act-icon act-comment"></span> 评论
             </button>
-            ${isAuthor ? '<button class="action-btn" onclick="deleteQuestion(\'' + q.id + '\')">🗑 删除</button>' : ''}
+            ${isAuthor ? '<button class="action-btn" onclick="deleteQuestion(\'' + q.id + '\')"><span class="act-icon act-delete"></span> 删除</button>' : ''}
         </div>
-        
+
         <div class="answers-section">
-            <h2>💬 ${answers.length} 个回答</h2>
+            <h2>${answers.length} 个回答</h2>
             ${sortedAnswers.map(a => renderAnswerCard(a, acceptedAnswer, answerCommentsMap, isAuthor, q)).join('')}
         </div>
-        
+
         <div class="comments-section">
-            <h3>📝 ${questionComments.length} 条评论</h3>
+            <h3>${questionComments.length} 条评论</h3>
             ${questionComments.map(c => renderCommentCard(c)).join('')}
-            <button class="btn-secondary" onclick="openCommentModal('${q.id}', 'QUESTION')" style="margin-top: 1rem;">
+            <button class="btn-secondary" onclick="openCommentModal('${q.id}', 'QUESTION')" style="margin-top:1rem;">
                 添加评论
             </button>
         </div>
@@ -267,33 +334,33 @@ async function loadQuestionEvaluation(questionId) {
     const contentDiv = document.getElementById(`evaluation-content-${questionId}`);
     if (!contentDiv) return;
     
-    contentDiv.innerHTML = '<p style="margin: 0; color: #666;">正在加载AI评估结果...</p>';
+    contentDiv.innerHTML = '<p style="margin:0;color:var(--text-light);">正在加载AI评估结果...</p>';
     
     try {
         const res = await fetchApi(`/questions/${questionId}/evaluation`);
         if (res.code === 200 && res.data && res.data.success) {
             const evalData = res.data.data;
             contentDiv.innerHTML = `
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                    <div style="background: #f5f5f5; padding: 0.75rem; border-radius: 6px;">
-                        <strong>📚 知识点:</strong>
-                        <p style="margin: 0.5rem 0 0 0;">${(evalData.extractedKnowledgePoints || []).join(', ') || '待分析'}</p>
+                <div class="eval-grid">
+                    <div class="eval-item">
+                        <strong>知识点:</strong>
+                        <p>${(evalData.extractedKnowledgePoints || []).join(', ') || '待分析'}</p>
                     </div>
-                    <div style="background: #f5f5f5; padding: 0.75rem; border-radius: 6px;">
-                        <strong>📊 难度:</strong>
-                        <p style="margin: 0.5rem 0 0 0;">${evalData.difficultyLevel || '待评估'}</p>
+                    <div class="eval-item">
+                        <strong>难度:</strong>
+                        <p>${evalData.difficultyLevel || '待评估'}</p>
                     </div>
-                    <div style="background: #f5f5f5; padding: 0.75rem; border-radius: 6px;">
-                        <strong>💡 难度说明:</strong>
-                        <p style="margin: 0.5rem 0 0 0;">${evalData.difficultyReason || '待分析'}</p>
+                    <div class="eval-item">
+                        <strong>难度说明:</strong>
+                        <p>${evalData.difficultyReason || '待分析'}</p>
                     </div>
                 </div>
             `;
         } else {
-            contentDiv.innerHTML = '<p style="margin: 0; color: #999;">暂无评估结果，AI正在分析中...</p>';
+            contentDiv.innerHTML = '<p style="margin:0;color:var(--text-light);">暂无评估结果，AI正在分析中...</p>';
         }
     } catch (error) {
-        contentDiv.innerHTML = '<p style="margin: 0; color: #999;">暂无评估结果，AI正在分析中...</p>';
+        contentDiv.innerHTML = '<p style="margin:0;color:var(--text-light);">暂无评估结果，AI正在分析中...</p>';
     }
 }
 
@@ -301,27 +368,27 @@ function renderAnswerCard(answer, acceptedAnswer, answerCommentsMap, isAuthor, q
     const isAccepted = acceptedAnswer && acceptedAnswer.id === answer.id;
     const comments = answerCommentsMap[answer.id] || [];
     const isAnswerAuthor = currentUserId && answer.authorId === currentUserId;
-    
+
     return `
         <div class="answer-card ${isAccepted ? 'accepted' : ''}" id="answer-${answer.id}">
             <div class="answer-header">
-                <span class="answer-author">👤 ${answer.authorName}</span>
-                ${isAccepted ? '<span class="accepted-badge">✓ 已采纳</span>' : ''}
+                <span class="answer-author">${answer.authorName}</span>
+                ${isAccepted ? '<span class="accepted-badge">已采纳</span>' : ''}
             </div>
             <div class="answer-content">${escapeHtml(answer.content)}</div>
-            <div class="ai-answer-evaluation" id="answer-eval-${answer.id}" style="margin: 0.5rem 0; padding: 0.5rem; background: #f8f9fa; border-radius: 6px;">
-                <button class="btn-small" onclick="loadAnswerEvaluation('${answer.id}')">🤖 查看AI评分</button>
-                <div id="answer-eval-content-${answer.id}" style="margin-top: 0.5rem;"></div>
+            <div class="answer-eval" id="answer-eval-${answer.id}">
+                <button class="btn-small btn-secondary" onclick="loadAnswerEvaluation('${answer.id}')">查看AI评分</button>
+                <div id="answer-eval-content-${answer.id}"></div>
             </div>
             <div class="answer-actions">
                 <button class="action-btn ${isAnswerLiked(answer) ? 'liked' : ''}" onclick="toggleLikeAnswer('${answer.id}')">
-                    ${isAnswerLiked(answer) ? '❤️' : '🤍'} ${answer.likeCount || 0}
+                    <span class="act-icon act-like"></span> ${answer.likeCount || 0}
                 </button>
                 <button class="action-btn" onclick="openCommentModal('${answer.id}', 'ANSWER')">
-                    📝 评论 (${comments.length})
+                    <span class="act-icon act-comment"></span> 评论 (${comments.length})
                 </button>
-                ${!isAccepted && isAuthor ? '<button class="action-btn" onclick="acceptAnswer(\'' + answer.id + '\')">✓ 采纳</button>' : ''}
-                ${isAnswerAuthor ? '<button class="action-btn" onclick="deleteAnswer(\'' + answer.id + '\')">🗑 删除</button>' : ''}
+                ${!isAccepted && isAuthor ? '<button class="action-btn" onclick="acceptAnswer(\'' + answer.id + '\')"><span class="act-icon act-accept"></span> 采纳</button>' : ''}
+                ${isAnswerAuthor ? '<button class="action-btn" onclick="deleteAnswer(\'' + answer.id + '\')"><span class="act-icon act-delete"></span> 删除</button>' : ''}
             </div>
         </div>
     `;
@@ -333,7 +400,7 @@ async function loadAnswerEvaluation(answerId) {
     console.log('contentDiv:', contentDiv);
     if (!contentDiv) return;
     
-    contentDiv.innerHTML = '<p style="margin: 0; color: #666;">正在加载AI评分...</p>';
+    contentDiv.innerHTML = '<p style="margin:0;color:var(--text-light);">正在加载AI评分...</p>';
     
     try {
         const res = await fetchApi(`/answers/${answerId}/evaluation`);
@@ -354,37 +421,31 @@ async function loadAnswerEvaluation(answerId) {
         
         if (evalData && evalData.score !== undefined) {
             contentDiv.innerHTML = `
-                <div style="background: #fff; padding: 0.75rem; border-radius: 6px; border: 1px solid #ddd;">
-                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
-                        <strong>📝 AI评分:</strong>
-                        <span style="font-size: 1.5rem; font-weight: bold; color: #667eea;">${evalData.score || '--'}</span>
-                        <span style="color: #666;">/ 100</span>
+                <div class="eval-score-card">
+                    <div class="eval-score-row">
+                        <strong>AI评分:</strong>
+                        <span class="eval-score-num">${evalData.score || '--'}</span>
+                        <span>/ 100</span>
                     </div>
-                    <div style="color: #666; font-size: 0.9rem;">
+                    <div class="eval-score-reason">
                         <strong>评价:</strong> ${evalData.evaluationReason || '待分析'}
                     </div>
-                    <button class="btn-small" onclick="reevaluateAnswer('${answerId}')" style="margin-top: 0.5rem; background: #f0f0f0; color: #666;">
-                        🔄 重新评定
-                    </button>
+                    <button class="btn-small btn-secondary" onclick="reevaluateAnswer('${answerId}')">重新评定</button>
                 </div>
             `;
         } else {
             contentDiv.innerHTML = `
-                <div style="background: #fff; padding: 0.75rem; border-radius: 6px; border: 1px solid #ddd;">
-                    <p style="margin: 0 0 0.5rem 0; color: #999;">暂无评分结果</p>
-                    <button class="btn-small" onclick="reevaluateAnswer('${answerId}')">
-                        🤖 开始评定
-                    </button>
+                <div class="eval-score-card">
+                    <p>暂无评分结果</p>
+                    <button class="btn-small btn-secondary" onclick="reevaluateAnswer('${answerId}')">开始评定</button>
                 </div>
             `;
         }
     } catch (error) {
         contentDiv.innerHTML = `
-            <div style="background: #fff; padding: 0.75rem; border-radius: 6px; border: 1px solid #ddd;">
-                <p style="margin: 0 0 0.5rem 0; color: #999;">暂无评分结果</p>
-                <button class="btn-small" onclick="reevaluateAnswer('${answerId}')">
-                    🤖 开始评定
-                </button>
+            <div class="eval-score-card">
+                <p>暂无评分结果</p>
+                <button class="btn-small btn-secondary" onclick="reevaluateAnswer('${answerId}')">开始评定</button>
             </div>
         `;
     }
@@ -394,7 +455,7 @@ async function reevaluateAnswer(answerId) {
     const contentDiv = document.getElementById(`answer-eval-content-${answerId}`);
     if (!contentDiv) return;
     
-    contentDiv.innerHTML = '<p style="margin: 0; color: #666;">正在重新评估...</p>';
+    contentDiv.innerHTML = '<p style="margin:0;color:var(--text-light);">正在重新评估...</p>';
     
     try {
         const answerRes = await fetchApi(`/answers/${answerId}`);
@@ -419,16 +480,18 @@ async function reevaluateAnswer(answerId) {
             }
         }
     } catch (error) {
-        contentDiv.innerHTML = '<p style="margin: 0; color: #999;">评估失败，请重试</p>';
+        contentDiv.innerHTML = '<p style="margin:0;color:var(--text-light);">评估失败，请重试</p>';
     }
 }
 
 function renderCommentCard(comment) {
     return `
         <div class="comment-card">
-            <div class="comment-author">👤 ${comment.authorName}</div>
+            <div class="comment-header">
+                <span class="comment-author-name">${comment.authorName}</span>
+                <span>${formatDate(comment.createTime)}</span>
+            </div>
             <div class="comment-content">${escapeHtml(comment.content)}</div>
-            <div class="comment-time">${formatDate(comment.createTime)}</div>
         </div>
     `;
 }
@@ -883,6 +946,8 @@ window.loadQuestionsByKnowledgePoint = loadQuestionsByKnowledgePoint;
 window.loadQuestionEvaluation = loadQuestionEvaluation;
 window.loadAnswerEvaluation = loadAnswerEvaluation;
 window.reevaluateAnswer = reevaluateAnswer;
+window.searchFromHero = searchFromHero;
+window.filterNotifications = filterNotifications;
 
 // ==================== Redis 功能相关函数 ====================
 
@@ -925,7 +990,9 @@ async function refreshPopularRanking() {
 
             container.innerHTML = res.data.map((item, index) => {
                 const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : 'rank-other';
-                const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}`;
+                const medal = index < 3
+                    ? `<span class="medal medal-${index + 1}"></span>`
+                    : `${index + 1}`;
                 return `
                     <div class="ranking-item-enhanced" onclick="viewQuestionDetail('${item.questionId}')">
                         <div class="rank-badge ${rankClass}">${medal}</div>
@@ -933,10 +1000,10 @@ async function refreshPopularRanking() {
                             <h4 class="question-title">${item.title || '未知问题'}</h4>
                             <p class="question-excerpt">${item.content || '暂无内容'}</p>
                             <div class="question-meta">
-                                <span class="meta-item">👤 ${item.authorName || '匿名用户'}</span>
-                                <span class="meta-item">👁️ ${item.viewCount || 0} 次浏览</span>
-                                <span class="meta-item">❤️ ${item.likeCount || 0} 点赞</span>
-                                <span class="meta-item">💬 ${item.answerCount || 0} 回答</span>
+                                <span class="meta-item">${item.authorName || '匿名用户'}</span>
+                                <span class="meta-item">${item.viewCount || 0} 次浏览</span>
+                                <span class="meta-item">${item.likeCount || 0} 点赞</span>
+                                <span class="meta-item">${item.answerCount || 0} 回答</span>
                             </div>
                         </div>
                         <div class="score-display">
@@ -947,12 +1014,12 @@ async function refreshPopularRanking() {
                 `;
             }).join('');
         } else {
-            container.innerHTML = '<p class="empty-state">📭 暂无排行数据<br><small>请先创建问题并互动</small></p>';
+            container.innerHTML = '<p class="empty-state">暂无排行数据<br><small>请先创建问题并互动</small></p>';
             document.getElementById('rankingCount').textContent = '0';
         }
     } catch (error) {
         console.error('Failed to load popular ranking:', error);
-        container.innerHTML = '<p class="error-state">⚠️ 加载失败</p>';
+        container.innerHTML = '<p class="error-state">加载失败</p>';
     }
 }
 
@@ -1013,7 +1080,7 @@ async function refreshHotViewedList() {
                         <span>👤 ${q.authorName}</span>
                         <span>👁 ${q.viewCount} 次浏览</span>
                         <span>❤️ ${q.likeCount || 0} 赞</span>
-                        <span style="color: #e74c3c; font-weight: bold;">⚡ Redis缓存</span>
+                        <span class="redis-cache-tag">Redis 缓存</span>
                     </div>
                 </div>
             `).join('');
@@ -1035,14 +1102,6 @@ async function refreshMyActivity() {
     try {
         const res = await fetchApi(`/redis/users/${currentUserId}/activity/recent?limit=10`);
         if (res.code === 200 && res.data && res.data.length > 0) {
-            const typeIcons = {
-                'LIKE': '❤️',
-                'VIEW': '👁️',
-                'ANSWER': '💬',
-                'QUESTION': '❓',
-                'COMMENT': '💭'
-            };
-
             const typeNames = {
                 'LIKE': '点赞',
                 'VIEW': '浏览',
@@ -1051,11 +1110,20 @@ async function refreshMyActivity() {
                 'COMMENT': '评论'
             };
 
+            const typeClasses = {
+                'LIKE': 'act-type-like',
+                'VIEW': 'act-type-view',
+                'ANSWER': 'act-type-answer',
+                'QUESTION': 'act-type-question',
+                'COMMENT': 'act-type-comment'
+            };
+
             container.innerHTML = res.data.reverse().map(activity => {
                 const timeAgo = formatTimeAgo(activity.timestamp);
+                const cls = typeClasses[activity.type] || 'act-type-default';
                 return `
                     <div class="activity-item">
-                        <div class="activity-type-icon">${typeIcons[activity.type] || '📌'}</div>
+                        <div class="activity-type-icon"><span class="act-dot ${cls}"></span></div>
                         <div class="activity-details">
                             <div class="activity-type-text">${typeNames[activity.type] || activity.type}</div>
                             <div class="activity-time">${timeAgo}</div>
@@ -1076,10 +1144,10 @@ async function refreshMyActivity() {
 async function markMeOnline() {
     try {
         await fetchApi(`/redis/users/${currentUserId}/online`, 'POST');
-        alert('✅ 已标记为在线状态！');
+        alert('已标记为在线状态！');
         refreshOnlineUserCount();
     } catch (error) {
-        alert('❌ 标记在线失败: ' + error.message);
+        alert('标记在线失败: ' + error.message);
     }
 }
 
@@ -1087,11 +1155,11 @@ async function markMeOnline() {
 async function recordMyActivity(activityType) {
     try {
         await fetchApi(`/redis/users/${currentUserId}/activity?activityType=${activityType}`, 'POST');
-        alert(`✅ 已记录 ${activityType} 活动！`);
+        alert(`已记录 ${activityType} 活动！`);
         refreshMyActivity();
         refreshActiveUsers();
     } catch (error) {
-        alert('❌ 记录活动失败: ' + error.message);
+        alert('记录活动失败: ' + error.message);
     }
 }
 
@@ -1099,10 +1167,10 @@ async function recordMyActivity(activityType) {
 async function syncHotViewedCache() {
     try {
         await fetchApi('/redis/sync/hot-viewed', 'POST');
-        alert('✅ 缓存同步成功！');
+        alert('缓存同步成功！');
         refreshHotViewedList();
     } catch (error) {
-        alert('❌ 同步失败: ' + error.message);
+        alert('同步失败: ' + error.message);
     }
 }
 
@@ -1113,10 +1181,10 @@ async function syncAllRedisData() {
             fetchApi('/redis/sync/popular', 'POST'),
             fetchApi('/redis/sync/hot-viewed', 'POST')
         ]);
-        alert('✅ 全量同步成功！');
+        alert('全量同步成功！');
         loadRedisData();
     } catch (error) {
-        alert('❌ 同步失败: ' + error.message);
+        alert('同步失败: ' + error.message);
     }
 }
 
@@ -1252,7 +1320,7 @@ function renderNotificationList(notifications) {
     if (!notifications || notifications.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
-                <h3>📭 暂无通知</h3>
+                <h3>暂无通知</h3>
                 <small>当有人回答你的问题或点赞时，你会收到通知</small>
             </div>
         `;
@@ -1276,19 +1344,14 @@ function renderNotificationList(notifications) {
     `).join('');
 }
 
-// 获取通知图标
+// 获取通知图标 CSS 类
 function getNotificationIcon(type) {
     switch(type) {
-        case 'ANSWER':
-            return '💬';
-        case 'LIKE':
-            return '❤️';
-        case 'COMMENT':
-            return '📝';
-        case 'SYSTEM':
-            return '⚙️';
-        default:
-            return '🔔';
+        case 'ANSWER':    return '<span class="notif-dot dot-answer"></span>';
+        case 'LIKE':      return '<span class="notif-dot dot-like"></span>';
+        case 'COMMENT':   return '<span class="notif-dot dot-comment"></span>';
+        case 'SYSTEM':    return '<span class="notif-dot dot-system"></span>';
+        default:          return '<span class="notif-dot dot-default"></span>';
     }
 }
 
@@ -1314,7 +1377,7 @@ async function markAllNotificationsRead() {
         const res = await fetchApi(`/notifications/user/${currentUserId}/read-all`, 'PUT');
         
         if (res.code === 200) {
-            alert('✅ 已将所有通知标记为已读');
+            alert('已将所有通知标记为已读');
             // 重新加载通知列表
             loadNotifications();
             // 更新未读数
@@ -1371,7 +1434,7 @@ function renderContactList(messages) {
     if (!messages || messages.length === 0) {
         container.innerHTML = `
             <div class="empty-state" style="padding: 2rem;">
-                <h3>📭 暂无私信</h3>
+                <h3>暂无私信</h3>
                 <small>点击"发消息"开始对话</small>
             </div>
         `;
@@ -1617,7 +1680,7 @@ async function handleSendMessage(event) {
         if (res.code === 200) {
             closeModal('sendMessageModal');
             document.getElementById('messageContentInput').value = '';
-            alert('✅ 发送成功！');
+            alert('发送成功！');
             
             // 如果当前正在与该用户聊天，刷新消息
             if (currentChatUserId === receiverId) {
@@ -1673,23 +1736,7 @@ function formatTime(dateString) {
     return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
 }
 
-// 在页面切换时加载对应数据
-const originalShowPage = showPage;
-showPage = function(pageName) {
-    originalShowPage(pageName);
-    
-    switch(pageName) {
-        case 'notifications':
-            notificationPage = 0;
-            loadNotifications();
-            break;
-        case 'messages':
-            loadContacts();
-            break;
-    }
-};
-
-// 在初始化函数中启动未读数轮询
+// 扩展初始化以启动未读数轮询
 const originalInitApp = initApp;
 initApp = function() {
     originalInitApp();
