@@ -1048,16 +1048,6 @@ body::before {
     border-color: var(--ink);
 }
 
-/* ── Footer ────────────────────────────────────────── */
-footer {
-    background: var(--ink-dark);
-    color: rgba(255,253,249,0.7);
-    text-align: center;
-    padding: 1.5rem 0;
-    margin-top: 3rem;
-    font-size: 0.85rem;
-}
-
 /* ── Empty / Loading ───────────────────────────────── */
 .empty-state {
     text-align: center;
@@ -2032,8 +2022,6 @@ footer {
     .hamburger { display: flex; }
 
     .mobile-nav { display: flex; }
-
-    footer { margin-bottom: 4rem; }
 
     .hero { padding: 1.5rem 0.5rem; }
     .hero h1 { font-size: 1.8rem; }
