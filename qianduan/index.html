@@ -101,28 +101,10 @@
             </div>
         </div>
 
-        <!-- Two-column: Recommend + Tags -->
-        <div class="home-grid">
-            <div class="home-main">
-                <div class="section">
-                    <h2>推荐问题</h2>
-                    <div id="recommendQuestions" class="question-list"></div>
-                </div>
-            </div>
-            <div class="home-side">
-                <div class="side-card">
-                    <h3>热门标签</h3>
-                    <div id="hotTagsCloud" class="tags-cloud">
-                        <span class="tag-placeholder">加载中...</span>
-                    </div>
-                </div>
-                <div class="side-card">
-                    <h3>活跃用户</h3>
-                    <div id="activeUsersMini" class="user-list-mini">
-                        <span class="tag-placeholder">加载中...</span>
-                    </div>
-                </div>
-            </div>
+        <!-- Recommend -->
+        <div class="section">
+            <h2>推荐问题</h2>
+            <div id="recommendQuestions" class="question-list"></div>
         </div>
     </section>
 
@@ -138,20 +120,8 @@
             </div>
         </div>
 
-        <div class="content-grid">
-            <div class="content-main">
-                <div id="allQuestions" class="question-list"></div>
-                <div class="pagination" id="pagination"></div>
-            </div>
-            <div class="content-side">
-                <div class="side-card">
-                    <h3>知识点筛选</h3>
-                    <div id="knowledgeFilter" class="filter-list">
-                        <span class="tag-placeholder">加载中...</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <div id="allQuestions" class="question-list"></div>
+        <div class="pagination" id="pagination"></div>
     </section>
 
     <!-- =============================================
@@ -163,19 +133,7 @@
             <button class="btn-primary" onclick="showAddKnowledge()">添加知识点</button>
         </div>
 
-        <div class="content-grid">
-            <div class="content-side content-side-left">
-                <div class="side-card">
-                    <h3>分类筛选</h3>
-                    <div id="categoryFilter" class="filter-list">
-                        <span class="tag-placeholder">加载中...</span>
-                    </div>
-                </div>
-            </div>
-            <div class="content-main">
-                <div id="knowledgeList" class="knowledge-grid"></div>
-            </div>
-        </div>
+        <div id="knowledgeList" class="knowledge-grid"></div>
     </section>
 
     <!-- =============================================
@@ -354,19 +312,7 @@
          ============================================= -->
     <section id="detail-page" class="page">
         <button class="btn-back" onclick="showPage('home')">&larr; 返回</button>
-        <div class="detail-grid">
-            <div class="detail-main">
-                <div id="questionDetail"></div>
-            </div>
-            <div class="detail-side">
-                <div class="side-card">
-                    <h3>相关问题</h3>
-                    <div id="relatedQuestions" class="related-list">
-                        <span class="tag-placeholder">暂无</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <div id="questionDetail"></div>
     </section>
 
 </main>
