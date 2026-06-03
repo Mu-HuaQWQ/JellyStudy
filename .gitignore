@@ -38,6 +38,9 @@ docker-build.log
 # Claude
 .claude/
 
+# External repos
+skills/
+
 # Package files
 *.zip
 *.tar.gz
