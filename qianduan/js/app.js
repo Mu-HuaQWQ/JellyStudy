@@ -1845,6 +1845,246 @@ async function uploadAvatar(event) {
     }
     event.target.value = '';
 }
+
+async function loadProfileHistory() {
+    const container = document.getElementById('profileTabContent');
+    try {
+        const res = await fetchApi(`/users/${currentUserId}/history`);
+        if (res.code !== 200) {
+            container.innerHTML = '<p class="profile-empty">加载失败</p>';
+            return;
+        }
+        const list = res.data || [];
+        if (list.length === 0) {
+            container.innerHTML = '<p class="profile-empty">暂无浏览记录</p>';
+            return;
+        }
+        container.innerHTML = `
+            <div class="profile-item-list">
+                ${list.map(h => `
+                    <div class="profile-item-card">
+                        <span class="item-title" onclick="viewQuestionDetail('${h.questionId}')" title="${escapeHtml(h.questionTitle || '')}">
+                            ${escapeHtml(h.questionTitle || '(已删除的问题)')}
+                        </span>
+                        <span class="item-time">${formatDate(h.viewTime)}</span>
+                    </div>
+                `).join('')}
+            </div>`;
+    } catch (e) {
+        container.innerHTML = '<p class="profile-empty">加载失败: ' + e.message + '</p>';
+    }
+}
+
+async function loadProfileFavorites() {
+    const container = document.getElementById('profileTabContent');
+    try {
+        const res = await fetchApi(`/users/${currentUserId}/favorites`);
+        if (res.code !== 200) {
+            container.innerHTML = '<p class="profile-empty">加载失败</p>';
+            return;
+        }
+        const list = res.data || [];
+        if (list.length === 0) {
+            container.innerHTML = '<p class="profile-empty">暂无收藏</p>';
+            return;
+        }
+        container.innerHTML = `
+            <div class="profile-item-list">
+                ${list.map(f => `
+                    <div class="profile-item-card">
+                        <span class="item-title" onclick="viewQuestionDetail('${f.questionId}')" title="${escapeHtml(f.questionTitle || '')}">
+                            ${escapeHtml(f.questionTitle || '(已删除的问题)')}
+                        </span>
+                        <span class="item-time">${formatDate(f.createTime)}</span>
+                        <button class="item-action" onclick="removeProfileFavorite('${f.questionId}')">取消收藏</button>
+                    </div>
+                `).join('')}
+            </div>`;
+    } catch (e) {
+        container.innerHTML = '<p class="profile-empty">加载失败: ' + e.message + '</p>';
+    }
+}
+
+async function removeProfileFavorite(questionId) {
+    try {
+        const res = await fetchApi(`/users/${currentUserId}/favorites?questionId=${questionId}`, 'DELETE');
+        if (res.code === 200) {
+            loadProfileFavorites();
+        } else {
+            alert('取消收藏失败: ' + res.message);
+        }
+    } catch (e) {
+        alert('请求失败: ' + e.message);
+    }
+}
+
+async function loadProfileFollowing() {
+    const container = document.getElementById('profileTabContent');
+    try {
+        const res = await fetchApi(`/users/${currentUserId}/following`);
+        if (res.code !== 200) {
+            container.innerHTML = '<p class="profile-empty">加载失败</p>';
+            return;
+        }
+        const list = res.data || [];
+        if (list.length === 0) {
+            container.innerHTML = '<p class="profile-empty">还没有关注任何人</p>';
+            return;
+        }
+        container.innerHTML = `
+            <div class="profile-item-list">
+                ${list.map(u => `
+                    <div class="profile-user-item">
+                        ${renderProfileUserAvatar(u)}
+                        <span class="profile-user-name">${escapeHtml(u.nickname || u.username)}</span>
+                        <button class="profile-user-action" onclick="unfollowUser('${u.id}')">取消关注</button>
+                    </div>
+                `).join('')}
+            </div>`;
+    } catch (e) {
+        container.innerHTML = '<p class="profile-empty">加载失败: ' + e.message + '</p>';
+    }
+}
+
+async function loadProfileFollowers() {
+    const container = document.getElementById('profileTabContent');
+    try {
+        const res = await fetchApi(`/users/${currentUserId}/followers`);
+        if (res.code !== 200) {
+            container.innerHTML = '<p class="profile-empty">加载失败</p>';
+            return;
+        }
+        const list = res.data || [];
+        if (list.length === 0) {
+            container.innerHTML = '<p class="profile-empty">还没有粉丝</p>';
+            return;
+        }
+        container.innerHTML = `
+            <div class="profile-item-list">
+                ${list.map(u => `
+                    <div class="profile-user-item">
+                        ${renderProfileUserAvatar(u)}
+                        <span class="profile-user-name">${escapeHtml(u.nickname || u.username)}</span>
+                        <span style="font-size:0.78rem;color:var(--text-muted);">${u.reputation || 0} 贡献点</span>
+                    </div>
+                `).join('')}
+            </div>`;
+    } catch (e) {
+        container.innerHTML = '<p class="profile-empty">加载失败: ' + e.message + '</p>';
+    }
+}
+
+function renderProfileUserAvatar(u) {
+    if (u.avatar) {
+        return `<img class="profile-user-avatar" src="${IMAGE_BASE_URL}${u.avatar}" alt="${u.username}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" onload="this.nextElementSibling.style.display='none';"><div class="profile-user-avatar-fb" style="display:none;">${(u.nickname || u.username || 'U')[0].toUpperCase()}</div>`;
+    }
+    return `<div class="profile-user-avatar-fb">${(u.nickname || u.username || 'U')[0].toUpperCase()}</div>`;
+}
+
+async function unfollowUser(targetId) {
+    if (!confirm('确定取消关注？')) return;
+    try {
+        const res = await fetchApi(`/users/${currentUserId}/follow?targetId=${targetId}`, 'DELETE');
+        if (res.code === 200) {
+            loadProfileFollowing();
+            // 刷新 header 统计数据
+            loadProfileHeaderStats();
+        } else {
+            alert('取消关注失败: ' + res.message);
+        }
+    } catch (e) {
+        alert('请求失败: ' + e.message);
+    }
+}
+
+async function loadProfileHeaderStats() {
+    try {
+        const res = await fetchApi(`/users/${currentUserId}/profile`);
+        if (res.code === 200) {
+            const p = res.data;
+            document.getElementById('profileFollowing').textContent = p.followingCount || 0;
+            document.getElementById('profileFollowers').textContent = p.followerCount || 0;
+            document.getElementById('profileReputation').textContent = p.reputation || 0;
+        }
+    } catch (e) { /* 静默失败 */ }
+}
+
+async function loadProfileTitles() {
+    const container = document.getElementById('profileTabContent');
+    try {
+        const res = await fetchApi(`/users/${currentUserId}/titles`);
+        if (res.code !== 200) {
+            container.innerHTML = '<p class="profile-empty">加载失败</p>';
+            return;
+        }
+        const titles = res.data || [];
+        if (titles.length === 0) {
+            container.innerHTML = '<p class="profile-empty">暂无称号数据</p>';
+            return;
+        }
+
+        // 图标映射
+        const iconMap = {
+            'newbie': '🌟',
+            'asker': '❓',
+            'asker_pro': '💡',
+            'answerer': '⭐',
+            'scholar': '🎓',
+            'master': '👑'
+        };
+
+        container.innerHTML = `
+            <div class="profile-titles-list">
+                ${titles.map(t => {
+                    let cls = 'profile-title-item';
+                    let actionHtml = '';
+                    const icon = iconMap[t.code] || '🏅';
+                    if (t.wearing) {
+                        cls += ' wearing';
+                        actionHtml = '<span class="profile-title-action wearing-badge">佩戴中</span>';
+                    } else if (t.unlocked) {
+                        cls += ' unlocked';
+                        actionHtml = `<button class="profile-title-action wear" onclick="wearTitle('${t.code}')">佩戴</button>`;
+                    } else {
+                        cls += ' locked';
+                        actionHtml = '<span class="profile-title-action locked-badge">未解锁</span>';
+                    }
+                    return `
+                        <div class="${cls}">
+                            <span class="profile-title-icon">${icon}</span>
+                            <div class="profile-title-info">
+                                <div class="profile-title-name">${escapeHtml(t.name)}</div>
+                                <div class="profile-title-desc">${escapeHtml(t.requirement)}</div>
+                            </div>
+                            ${actionHtml}
+                        </div>`;
+                }).join('')}
+            </div>`;
+    } catch (e) {
+        container.innerHTML = '<p class="profile-empty">加载失败: ' + e.message + '</p>';
+    }
+}
+
+async function wearTitle(code) {
+    try {
+        const res = await fetchApi(`/users/${currentUserId}/display-title?code=${encodeURIComponent(code)}`, 'PUT');
+        if (res.code === 200) {
+            // 刷新称号列表
+            loadProfileTitles();
+            // 刷新 header 中的佩戴称号
+            const titleNameMap = {
+                'newbie': '新人', 'asker': '提问新秀', 'asker_pro': '提问达人',
+                'answerer': '解答之星', 'scholar': '学者', 'master': '大师'
+            };
+            document.getElementById('profileTitleBadge').textContent = titleNameMap[code] || code;
+        } else {
+            alert('设置失败: ' + res.message);
+        }
+    } catch (e) {
+        alert('请求失败: ' + e.message);
+    }
+}
+
 function formatTime(dateString) {
     const date = new Date(dateString);
     return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
