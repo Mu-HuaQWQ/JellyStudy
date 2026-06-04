@@ -1554,9 +1554,18 @@ body::before {
     font-family: 'JetBrains Mono', monospace;
 }
 
-.rank-1 { background: linear-gradient(135deg, #cf9c3a, #e8b84b); color: #fff; }
-.rank-2 { background: linear-gradient(135deg, #a0a7b0, #c8cdd4); color: #fff; }
-.rank-3 { background: linear-gradient(135deg, #b8865c, #d4a076); color: #fff; }
+/* Medal override for top 3 - remove rank-badge background */
+.rank-medal {
+    background: transparent;
+}
+
+.rank-medal .medal {
+    display: block;
+    width: 16px; height: 20px;
+    border-radius: 50%;
+    vertical-align: middle;
+}
+
 .rank-other { background: rgba(30,59,92,0.12); color: var(--ink); }
 
 .ranking-info { flex: 1; }

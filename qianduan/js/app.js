@@ -1068,9 +1068,7 @@ async function loadRedisData() {
         await Promise.all([
             refreshOnlineUserCount(),
             refreshPopularRanking(),
-            refreshActiveUsers(),
-            refreshHotViewedList(),
-            refreshMyActivity()
+            refreshActiveUsers()
         ]);
     } catch (error) {
         console.error('Failed to load Redis data:', error);
@@ -1101,7 +1099,7 @@ async function refreshPopularRanking() {
             document.getElementById('rankingCount').textContent = res.data.length;
 
             container.innerHTML = res.data.map((item, index) => {
-                const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : 'rank-other';
+                const rankClass = index < 3 ? 'rank-medal' : 'rank-other';
                 const medal = index < 3
                     ? `<span class="medal medal-${index + 1}"></span>`
                     : `${index + 1}`;
@@ -1167,172 +1165,6 @@ async function refreshActiveUsers() {
     }
 }
 
-// 刷新热门缓存问题列表
-async function refreshHotViewedList() {
-    const container = document.getElementById('hotViewedQuestionsList');
-    container.innerHTML = '<p class="loading-text">加载中...</p>';
-
-    try {
-        const questionIdsRes = await fetchApi('/redis/top-viewed-ids?limit=10');
-        if (questionIdsRes.code === 200 && questionIdsRes.data && questionIdsRes.data.length > 0) {
-            document.getElementById('cachedQuestionsCount').textContent = questionIdsRes.data.length;
-
-            // 批量获取问题详情
-            const questions = await Promise.all(
-                questionIdsRes.data.slice(0, 5).map(async id => {
-                    try {
-                        const res = await fetchApi(`/questions/${id}`);
-                        return res.code === 200 ? res.data : null;
-                    } catch (e) {
-                        return null;
-                    }
-                })
-            );
-
-            const validQuestions = questions.filter(q => q !== null);
-
-            container.innerHTML = validQuestions.map(q => `
-                <div class="question-card" onclick="viewQuestionDetail('${q.id}')">
-                    <h3>${escapeHtml(q.title)}</h3>
-                    <div class="question-meta">
-                        <span>👤 ${q.authorName}</span>
-                        <span>👁 ${q.viewCount} 次浏览</span>
-                        <span>❤️ ${q.likeCount || 0} 赞</span>
-                        <span class="redis-cache-tag">Redis 缓存</span>
-                    </div>
-                </div>
-            `).join('');
-        } else {
-            container.innerHTML = '<p class="loading-text">暂无缓存数据（浏览量>10的问题会被缓存）</p>';
-            document.getElementById('cachedQuestionsCount').textContent = '0';
-        }
-    } catch (error) {
-        console.error('Failed to load hot viewed list:', error);
-        container.innerHTML = '<p class="loading-text">加载失败</p>';
-    }
-}
-
-// 刷新我的最近活动
-async function refreshMyActivity() {
-    const container = document.getElementById('myActivityList');
-    container.innerHTML = '<p class="loading-text">加载中...</p>';
-
-    try {
-        const res = await fetchApi(`/redis/users/${currentUserId}/activity/recent?limit=10`);
-        if (res.code === 200 && res.data && res.data.length > 0) {
-            const typeNames = {
-                'LIKE': '点赞',
-                'VIEW': '浏览',
-                'ANSWER': '回答',
-                'QUESTION': '提问',
-                'COMMENT': '评论'
-            };
-
-            const typeClasses = {
-                'LIKE': 'act-type-like',
-                'VIEW': 'act-type-view',
-                'ANSWER': 'act-type-answer',
-                'QUESTION': 'act-type-question',
-                'COMMENT': 'act-type-comment'
-            };
-
-            container.innerHTML = res.data.reverse().map(activity => {
-                const timeAgo = formatTimeAgo(activity.timestamp);
-                const cls = typeClasses[activity.type] || 'act-type-default';
-                return `
-                    <div class="activity-item">
-                        <div class="activity-type-icon"><span class="act-dot ${cls}"></span></div>
-                        <div class="activity-details">
-                            <div class="activity-type-text">${typeNames[activity.type] || activity.type}</div>
-                            <div class="activity-time">${timeAgo}</div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        } else {
-            container.innerHTML = '<p class="loading-text">暂无活动记录（操作后会自动记录）</p>';
-        }
-    } catch (error) {
-        console.error('Failed to load my activity:', error);
-        container.innerHTML = '<p class="loading-text">加载失败</p>';
-    }
-}
-
-// 标记当前用户在线
-async function markMeOnline() {
-    try {
-        await fetchApi(`/redis/users/${currentUserId}/online`, 'POST');
-        alert('已标记为在线状态！');
-        refreshOnlineUserCount();
-    } catch (error) {
-        alert('标记在线失败: ' + error.message);
-    }
-}
-
-// 记录我的活动
-async function recordMyActivity(activityType) {
-    try {
-        await fetchApi(`/redis/users/${currentUserId}/activity?activityType=${activityType}`, 'POST');
-        alert(`已记录 ${activityType} 活动！`);
-        refreshMyActivity();
-        refreshActiveUsers();
-    } catch (error) {
-        alert('记录活动失败: ' + error.message);
-    }
-}
-
-// 同步热门缓存
-async function syncHotViewedCache() {
-    try {
-        await fetchApi('/redis/sync/hot-viewed', 'POST');
-        alert('缓存同步成功！');
-        refreshHotViewedList();
-    } catch (error) {
-        alert('同步失败: ' + error.message);
-    }
-}
-
-// 全量同步 Redis 数据
-async function syncAllRedisData() {
-    try {
-        await Promise.all([
-            fetchApi('/redis/sync/popular', 'POST'),
-            fetchApi('/redis/sync/hot-viewed', 'POST')
-        ]);
-        alert('全量同步成功！');
-        loadRedisData();
-    } catch (error) {
-        alert('同步失败: ' + error.message);
-    }
-}
-
-// 格式化时间戳为相对时间
-function formatTimeAgo(timestamp) {
-    if (!timestamp) return '';
-    const now = Date.now();
-    const diff = now - timestamp;
-
-    const seconds = Math.floor(diff / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-
-    if (seconds < 60) return `${seconds} 秒前`;
-    if (minutes < 60) return `${minutes} 分钟前`;
-    if (hours < 24) return `${hours} 小时前`;
-    return `${days} 天前`;
-}
-
-// 暴露到全局作用域
-window.refreshPopularRanking = refreshPopularRanking;
-window.refreshActiveUsers = refreshActiveUsers;
-window.refreshHotViewedList = refreshHotViewedList;
-window.refreshMyActivity = refreshMyActivity;
-window.refreshOnlineUserCount = refreshOnlineUserCount;
-window.markMeOnline = markMeOnline;
-window.recordMyActivity = recordMyActivity;
-window.syncHotViewedCache = syncHotViewedCache;
-window.syncAllRedisData = syncAllRedisData;
 
 // ========== 通知系统相关变量和函数 ==========
 // notificationPage / notificationPageSize 已提前到文件顶部

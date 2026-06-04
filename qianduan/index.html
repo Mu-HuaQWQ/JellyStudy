@@ -160,11 +160,6 @@
                 <div class="stat-label">在线用户</div>
                 <small>实时统计</small>
             </div>
-            <div class="redis-stat-card redis-stat-green">
-                <div class="stat-number" id="cachedQuestionsCount">--</div>
-                <div class="stat-label">缓存问题数</div>
-                <small>Redis 缓存</small>
-            </div>
             <div class="redis-stat-card redis-stat-amber">
                 <div class="stat-number" id="rankingCount">--</div>
                 <div class="stat-label">排行榜问题</div>
@@ -193,36 +188,6 @@
             </div>
         </div>
 
-        <div class="redis-panel" style="margin-top:20px;">
-            <div class="panel-header">
-                <h3>高频访问问题（Redis 缓存）</h3>
-                <div>
-                    <button class="btn-small btn-panel" onclick="syncHotViewedCache()">同步缓存</button>
-                    <button class="btn-small btn-panel" onclick="refreshHotViewedList()">刷新</button>
-                </div>
-            </div>
-            <div id="hotViewedQuestionsList" class="question-list">
-                <p class="loading-text">加载中...</p>
-            </div>
-        </div>
-
-        <div class="redis-panel" style="margin-top:20px;">
-            <div class="panel-header">
-                <h3>我的最近活动</h3>
-                <div>
-                    <button class="btn-small btn-panel" onclick="recordMyActivity('VIEW')">模拟浏览</button>
-                    <button class="btn-small btn-panel" onclick="refreshMyActivity()">刷新</button>
-                </div>
-            </div>
-            <div id="myActivityList" class="activity-list">
-                <p class="loading-text">加载中...</p>
-            </div>
-        </div>
-
-        <div class="redis-actions" style="margin-top:20px;text-align:center;">
-            <button class="btn-primary" onclick="markMeOnline()">标记在线</button>
-            <button class="btn-secondary" onclick="syncAllRedisData()">全量同步</button>
-        </div>
     </section>
 
     <!-- =============================================
