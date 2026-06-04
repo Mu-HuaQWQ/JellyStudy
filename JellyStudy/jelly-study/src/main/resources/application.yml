@@ -34,6 +34,10 @@ spring:
         prefetch: 10
   application:
     name: jelly-study
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
   zipkin:
     base-url: http://localhost:9411
   sleuth:
@@ -49,6 +53,10 @@ ai:
 evaluation:
   service:
     url: ${EVALUATION_SERVICE_URL:http://host.docker.internal:8089}
+
+app:
+  upload:
+    dir: ${APP_UPLOAD_DIR:uploads}
 
 dubbo:
   application:

@@ -28,6 +28,9 @@ services:
       - SPRING_CLOUD_NACOS_DISCOVERY_SERVER-ADDR=host.docker.internal:8848
       - SPRING_CLOUD_NACOS_CONFIG_SERVER-ADDR=host.docker.internal:8848
       - EVALUATION_SERVICE_URL=http://host.docker.internal:8089
+      - APP_UPLOAD_DIR=/uploads
+    volumes:
+      - ./uploads:/uploads
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
@@ -54,6 +57,9 @@ services:
       - SPRING_CLOUD_NACOS_DISCOVERY_SERVER-ADDR=host.docker.internal:8848
       - SPRING_CLOUD_NACOS_CONFIG_SERVER-ADDR=host.docker.internal:8848
       - EVALUATION_SERVICE_URL=http://host.docker.internal:8089
+      - APP_UPLOAD_DIR=/uploads
+    volumes:
+      - ./uploads:/uploads
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:

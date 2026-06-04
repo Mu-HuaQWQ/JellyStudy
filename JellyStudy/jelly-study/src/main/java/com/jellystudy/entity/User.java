@@ -9,6 +9,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -33,11 +34,23 @@ public class User {
     private String role;
     
     private Integer reputation;
-    
+
     private Integer questionCount;
-    
+
     private Integer answerCount;
-    
+
+    // 关注数（冗余存储）
+    private Integer followingCount;
+
+    // 粉丝数（冗余存储）
+    private Integer followerCount;
+
+    // 已解锁的称号 code
+    private List<String> ownedTitles;
+
+    // 当前佩戴展示的称号 code
+    private String displayTitle;
+
     @CreatedDate
     private LocalDateTime createTime;
 }

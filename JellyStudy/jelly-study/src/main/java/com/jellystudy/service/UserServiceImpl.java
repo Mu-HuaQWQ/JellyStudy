@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,6 +32,18 @@ public class UserServiceImpl implements UserService {
         }
         if (user.getRole() == null) {
             user.setRole("USER");
+        }
+        if (user.getFollowingCount() == null) {
+            user.setFollowingCount(0);
+        }
+        if (user.getFollowerCount() == null) {
+            user.setFollowerCount(0);
+        }
+        if (user.getOwnedTitles() == null) {
+            user.setOwnedTitles(new ArrayList<>(java.util.Collections.singletonList("newbie")));
+        }
+        if (user.getDisplayTitle() == null) {
+            user.setDisplayTitle("newbie");
         }
         return userRepository.save(user);
     }
