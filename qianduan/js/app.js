@@ -1,4 +1,5 @@
 const API_BASE_URL = 'http://localhost:8086/api';
+const IMAGE_BASE_URL = 'http://localhost:8086';
 let currentUserId = localStorage.getItem('userId') || 'user001';
 let currentUserName = localStorage.getItem('userName') || 'user001';
 // 当前聊天状态（提前声明，避免页面加载时 switchUser 等函数访问到 TDZ）
@@ -22,14 +23,59 @@ document.addEventListener('DOMContentLoaded', function() {
 function initApp() {
     setupNavigation();
     setupForms();
-    updateUserDisplay();
+    updateUserDisplay().catch(() => {});
     loadHomeData();
     loadUsers();
 }
 
-function updateUserDisplay() {
-    const el = document.getElementById('sidebarUserName');
-    if (el) el.textContent = currentUserName;
+async function updateUserDisplay() {
+    const nameEl = document.getElementById('sidebarUserName');
+    if (nameEl) nameEl.textContent = currentUserName;
+
+    const avatarEl = document.getElementById('sidebarUserAvatar');
+    if (!avatarEl) return;
+
+    // 清除旧内容
+    avatarEl.innerHTML = '';
+    avatarEl.style.backgroundImage = '';
+
+    try {
+        const res = await fetchApi(`/users/${currentUserId}`);
+        if (res.code === 200 && res.data && res.data.avatar) {
+            // 有头像：显示图片
+            const img = document.createElement('img');
+            img.src = IMAGE_BASE_URL + res.data.avatar;
+            img.alt = currentUserName;
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.borderRadius = '50%';
+            img.style.objectFit = 'cover';
+            img.onerror = () => {
+                // 图片加载失败，显示首字母兜底
+                img.style.display = 'none';
+                avatarEl.textContent = (currentUserName || 'U')[0].toUpperCase();
+                avatarEl.style.display = 'flex';
+                avatarEl.style.alignItems = 'center';
+                avatarEl.style.justifyContent = 'center';
+                avatarEl.style.color = '#fff';
+                avatarEl.style.fontWeight = '600';
+                avatarEl.style.fontSize = '0.85rem';
+            };
+            avatarEl.appendChild(img);
+            return;
+        }
+    } catch (e) {
+        // 请求失败，使用首字母兜底
+    }
+
+    // 无头像：显示首字母
+    avatarEl.textContent = (currentUserName || 'U')[0].toUpperCase();
+    avatarEl.style.display = 'flex';
+    avatarEl.style.alignItems = 'center';
+    avatarEl.style.justifyContent = 'center';
+    avatarEl.style.color = '#fff';
+    avatarEl.style.fontWeight = '600';
+    avatarEl.style.fontSize = '0.85rem';
 }
 
 function setupNavigation() {
@@ -122,6 +168,9 @@ function showPage(pageName) {
             break;
         case 'messages':
             loadContacts();
+            break;
+        case 'profile':
+            loadProfile();
             break;
     }
 }
@@ -838,7 +887,7 @@ async function handleCreateUserSubmit(e) {
                 currentUserName = nickname;
                 localStorage.setItem('userId', currentUserId);
                 localStorage.setItem('userName', currentUserName);
-                updateUserDisplay();
+                updateUserDisplay().catch(() => {});
                 closeModal('userModal');
                 alert('用户创建成功！');
                 
@@ -893,8 +942,8 @@ function switchUser() {
         currentUserName = selectedOption.textContent;
         localStorage.setItem('userId', currentUserId);
         localStorage.setItem('userName', currentUserName);
-        updateUserDisplay();
-        
+        updateUserDisplay().catch(() => {});
+
         console.log('切换用户 - 新用户ID:', currentUserId, '用户名:', currentUserName);
         
         // 重新加载联系人列表
