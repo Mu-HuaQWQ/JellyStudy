@@ -1099,13 +1099,10 @@ async function refreshPopularRanking() {
             document.getElementById('rankingCount').textContent = res.data.length;
 
             container.innerHTML = res.data.map((item, index) => {
-                const rankClass = index < 3 ? 'rank-medal' : 'rank-other';
-                const medal = index < 3
-                    ? `<span class="medal medal-${index + 1}"></span>`
-                    : `${index + 1}`;
+                const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
                 return `
                     <div class="ranking-item-enhanced" onclick="viewQuestionDetail('${item.questionId}')">
-                        <div class="rank-badge ${rankClass}">${medal}</div>
+                        <div class="rank-badge ${rankClass}">${index + 1}</div>
                         <div class="question-detail">
                             <h4 class="question-title">${item.title || '未知问题'}</h4>
                             <p class="question-excerpt">${item.content || '暂无内容'}</p>
