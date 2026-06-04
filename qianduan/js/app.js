@@ -322,6 +322,8 @@ async function viewQuestionDetail(questionId) {
         if (res.code === 200) {
             renderQuestionDetail(res.data);
             showPage('detail');
+            // 记录浏览历史（异步，不阻塞页面渲染）
+            fetchApi(`/users/${currentUserId}/history?questionId=${questionId}`, 'POST').catch(() => {});
         } else {
             alert('加载问题详情失败: ' + res.message);
         }
@@ -387,6 +389,12 @@ function renderQuestionDetail(data) {
                     <button class="action-btn" onclick="openCommentModal('${q.id}', 'QUESTION')">
                         <span class="act-icon act-comment"></span> 评论
                     </button>
+                    <button class="action-btn" id="detail-fav-btn-${q.id}" onclick="toggleFavoriteQuestion('${q.id}')">
+                        <span class="act-icon">⭐</span> 收藏
+                    </button>
+                    ${currentUserId && currentUserId !== q.authorId ? `<button class="action-btn" id="detail-follow-btn-${q.authorId}" onclick="toggleFollowUser('${q.authorId}')">
+                        <span class="act-icon">👤</span> 关注作者
+                    </button>` : ''}
                     ${isAuthor ? '<button class="action-btn" onclick="deleteQuestion(\'' + q.id + '\')"><span class="act-icon act-delete"></span> 删除</button>' : ''}
                 </div>
 
@@ -415,6 +423,21 @@ function renderQuestionDetail(data) {
 
     loadQuestionEvaluation(q.id);
     loadSimilarQuestions(q.id);
+
+    // 异步查询收藏状态
+    fetchApi(`/users/${currentUserId}/favorites/status?questionId=${q.id}`)
+        .then(r => { if (r.code === 200 && r.data) {
+            const btn = document.getElementById('detail-fav-btn-' + q.id);
+            if (btn) { btn.classList.add('liked'); btn.innerHTML = '<span class="act-icon">⭐</span> 已收藏'; }
+        }}).catch(() => {});
+    // 异步查询关注状态
+    if (currentUserId && currentUserId !== q.authorId) {
+        fetchApi(`/users/${currentUserId}/follow-status?targetId=${q.authorId}`)
+            .then(r => { if (r.code === 200 && r.data) {
+                const btn = document.getElementById('detail-follow-btn-' + q.authorId);
+                if (btn) { btn.classList.add('liked'); btn.innerHTML = '<span class="act-icon">👤</span> 已关注'; }
+            }}).catch(() => {});
+    }
 }
 
 async function loadQuestionEvaluation(questionId) {
@@ -2082,6 +2105,54 @@ async function wearTitle(code) {
         }
     } catch (e) {
         alert('请求失败: ' + e.message);
+    }
+}
+
+// ═══════════════════════════════════════════════════════
+// Question Detail: Favorite & Follow
+// ═══════════════════════════════════════════════════════
+
+async function toggleFavoriteQuestion(questionId) {
+    const btn = document.getElementById('detail-fav-btn-' + questionId);
+    const isFavorited = btn && btn.classList.contains('liked');
+    try {
+        if (isFavorited) {
+            const res = await fetchApi(`/users/${currentUserId}/favorites?questionId=${questionId}`, 'DELETE');
+            if (res.code === 200) {
+                btn.classList.remove('liked');
+                btn.innerHTML = '<span class="act-icon">⭐</span> 收藏';
+            }
+        } else {
+            const res = await fetchApi(`/users/${currentUserId}/favorites?questionId=${questionId}`, 'POST');
+            if (res.code === 200) {
+                btn.classList.add('liked');
+                btn.innerHTML = '<span class="act-icon">⭐</span> 已收藏';
+            }
+        }
+    } catch (e) {
+        alert('操作失败: ' + e.message);
+    }
+}
+
+async function toggleFollowUser(targetId) {
+    const btn = document.getElementById('detail-follow-btn-' + targetId);
+    const isFollowing = btn && btn.classList.contains('liked');
+    try {
+        if (isFollowing) {
+            const res = await fetchApi(`/users/${currentUserId}/follow?targetId=${targetId}`, 'DELETE');
+            if (res.code === 200) {
+                btn.classList.remove('liked');
+                btn.innerHTML = '<span class="act-icon">👤</span> 关注作者';
+            }
+        } else {
+            const res = await fetchApi(`/users/${currentUserId}/follow?targetId=${targetId}`, 'POST');
+            if (res.code === 200) {
+                btn.classList.add('liked');
+                btn.innerHTML = '<span class="act-icon">👤</span> 已关注';
+            }
+        }
+    } catch (e) {
+        alert('操作失败: ' + e.message);
     }
 }
 
