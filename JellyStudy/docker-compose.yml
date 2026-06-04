@@ -86,6 +86,17 @@ services:
     networks:
       - jelly-network
 
+  # 前端页面
+  qianduan:
+    build:
+      context: ../qianduan
+      dockerfile: Dockerfile
+    container_name: jelly-qianduan
+    ports:
+      - "8088:80"
+    networks:
+      - jelly-network
+
 networks:
   jelly-network:
     driver: bridge
