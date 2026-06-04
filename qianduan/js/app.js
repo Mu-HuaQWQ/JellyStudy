@@ -1726,7 +1726,125 @@ function formatRelativeTime(dateString) {
     return formatDate(dateString);
 }
 
-// 格式化时间（HH:mm）
+// ═══════════════════════════════════════════════════════
+// Profile / User Center
+// ═══════════════════════════════════════════════════════
+
+let currentProfileTab = 'history';
+
+async function loadProfile() {
+    try {
+        const res = await fetchApi(`/users/${currentUserId}/profile`);
+        if (res.code !== 200) {
+            alert('加载个人资料失败: ' + res.message);
+            return;
+        }
+        const p = res.data;
+
+        // 头像
+        const avatarImg = document.getElementById('profileAvatarImg');
+        const avatarFallback = document.getElementById('profileAvatarFallback');
+        if (p.avatar) {
+            avatarImg.src = IMAGE_BASE_URL + p.avatar;
+            avatarImg.style.display = 'block';
+            avatarFallback.style.display = 'none';
+        } else {
+            avatarImg.style.display = 'none';
+            avatarFallback.style.display = 'flex';
+            avatarFallback.textContent = (p.nickname || p.username || 'U')[0].toUpperCase();
+        }
+
+        // 基本信息
+        document.getElementById('profileNickname').textContent = p.nickname || p.username;
+        document.getElementById('profileTitleBadge').textContent = p.displayTitleName || '新人';
+
+        // 统计数据
+        document.getElementById('profileReputation').textContent = p.reputation || 0;
+        document.getElementById('profileFollowing').textContent = p.followingCount || 0;
+        document.getElementById('profileFollowers').textContent = p.followerCount || 0;
+        document.getElementById('profileQuestions').textContent = p.questionCount || 0;
+        document.getElementById('profileAnswers').textContent = p.answerCount || 0;
+
+        // 加载当前激活的 tab
+        switchProfileTab(currentProfileTab);
+    } catch (e) {
+        alert('请求失败: ' + e.message);
+    }
+}
+
+function switchProfileTab(tab) {
+    currentProfileTab = tab;
+
+    // 更新 tab 激活状态
+    document.querySelectorAll('.profile-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === tab);
+    });
+
+    // 路由到对应加载函数
+    switch (tab) {
+        case 'history':
+            loadProfileHistory();
+            break;
+        case 'favorites':
+            loadProfileFavorites();
+            break;
+        case 'following':
+            loadProfileFollowing();
+            break;
+        case 'followers':
+            loadProfileFollowers();
+            break;
+        case 'titles':
+            loadProfileTitles();
+            break;
+    }
+}
+
+async function uploadAvatar(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // 文件大小限制 2MB
+    if (file.size > 2 * 1024 * 1024) {
+        alert('头像文件不能超过 2MB');
+        event.target.value = '';
+        return;
+    }
+
+    // 仅允许图片类型
+    if (!file.type.startsWith('image/')) {
+        alert('请选择图片文件');
+        event.target.value = '';
+        return;
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const res = await fetch(API_BASE_URL + `/users/${currentUserId}/avatar`, {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        if (data.code === 200) {
+            // 刷新个人中心头像
+            const avatarImg = document.getElementById('profileAvatarImg');
+            const avatarFallback = document.getElementById('profileAvatarFallback');
+            avatarImg.src = IMAGE_BASE_URL + data.data.avatar + '?t=' + Date.now();
+            avatarImg.style.display = 'block';
+            avatarFallback.style.display = 'none';
+
+            // 刷新侧边栏头像
+            updateUserDisplay().catch(() => {});
+        } else {
+            alert('头像上传失败: ' + data.message);
+        }
+    } catch (e) {
+        alert('上传失败: ' + e.message);
+    }
+    event.target.value = '';
+}
 function formatTime(dateString) {
     const date = new Date(dateString);
     return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
