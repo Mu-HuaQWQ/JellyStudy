@@ -62,17 +62,20 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public List<Message> getConversation(String user1Id, String user2Id) {
-        return messageRepository.findBySenderIdOrReceiverIdOrderByCreateTimeDesc(user1Id, user2Id)
-                .stream()
-                .filter(m -> (m.getSenderId().equals(user1Id) && m.getReceiverId().equals(user2Id)) ||
-                           (m.getSenderId().equals(user2Id) && m.getReceiverId().equals(user1Id)))
-                .collect(java.util.stream.Collectors.toList());
+        // 双向查询：user1→user2 和 user2→user1
+        List<Message> sent = messageRepository.findBySenderIdAndReceiverIdOrderByCreateTimeDesc(user1Id, user2Id);
+        List<Message> received = messageRepository.findBySenderIdAndReceiverIdOrderByCreateTimeDesc(user2Id, user1Id);
+        sent.addAll(received);
+        // 按时间降序排列（最新在前）
+        sent.sort((a, b) -> b.getCreateTime().compareTo(a.getCreateTime()));
+        return sent;
     }
 
     @Override
     public List<Message> getUserMessages(String userId, int page, int size) {
-        return messageRepository.findByReceiverIdOrderByCreateTimeDesc(userId)
-                .stream()
+        // 查询该用户收发过的所有消息，用于构建联系人列表
+        List<Message> all = messageRepository.findBySenderIdOrReceiverIdOrderByCreateTimeDesc(userId, userId);
+        return all.stream()
                 .skip((long) page * size)
                 .limit(size)
                 .collect(java.util.stream.Collectors.toList());
@@ -96,10 +99,9 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public void markAllMessagesAsRead(String senderId, String receiverId) {
-        List<Message> messages = messageRepository.findBySenderIdOrReceiverIdOrderByCreateTimeDesc(senderId, receiverId)
+        List<Message> messages = messageRepository.findBySenderIdAndReceiverIdOrderByCreateTimeDesc(senderId, receiverId)
                 .stream()
-                .filter(m -> m.getSenderId().equals(senderId) && m.getReceiverId().equals(receiverId) &&
-                           m.getStatus() == Message.MessageStatus.UNREAD)
+                .filter(m -> m.getStatus() == Message.MessageStatus.UNREAD)
                 .collect(java.util.stream.Collectors.toList());
 
         for (Message message : messages) {

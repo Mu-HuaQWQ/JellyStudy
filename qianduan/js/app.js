@@ -1,9 +1,19 @@
 const API_BASE_URL = 'http://localhost:8086/api';
 let currentUserId = localStorage.getItem('userId') || 'user001';
 let currentUserName = localStorage.getItem('userName') || 'user001';
+// 当前聊天状态（提前声明，避免页面加载时 switchUser 等函数访问到 TDZ）
+let currentChatUserId = null;
+let currentChatUserName = null;
 
 let currentPage = 0;
 const pageSize = 10;
+
+// 通知分页（提前声明，避免 showPage('notifications') 触发 TDZ）
+let notificationPage = 0;
+const notificationPageSize = 10;
+
+// 用户缓存：id -> { nickname, username }，供活跃用户等展示使用
+const usersCache = {};
 
 document.addEventListener('DOMContentLoaded', function() {
     initApp();
@@ -161,6 +171,22 @@ async function loadHomeData() {
         }
     } catch (error) {
         console.error('Failed to load home data:', error);
+    }
+}
+
+async function searchQuestions() {
+    const keyword = (document.getElementById('searchInput')?.value || '').trim();
+    if (!keyword) {
+        loadAllQuestions();
+        return;
+    }
+    try {
+        const res = await fetchApi(`/questions/search?keyword=${encodeURIComponent(keyword)}`);
+        if (res.code === 200) {
+            renderQuestions(res.data, 'allQuestions');
+        }
+    } catch (error) {
+        console.error('Failed to search questions:', error);
     }
 }
 
@@ -454,33 +480,60 @@ async function loadAnswerEvaluation(answerId) {
 async function reevaluateAnswer(answerId) {
     const contentDiv = document.getElementById(`answer-eval-content-${answerId}`);
     if (!contentDiv) return;
-    
-    contentDiv.innerHTML = '<p style="margin:0;color:var(--text-light);">正在重新评估...</p>';
-    
+
+    contentDiv.innerHTML = '<p style="margin:0;color:var(--text-light);">正在评估，请稍候...</p>';
+
     try {
         const answerRes = await fetchApi(`/answers/${answerId}`);
-        console.log('Answer response:', answerRes);
-        if (answerRes.code === 200 && answerRes.data) {
-            const answer = answerRes.data;
-            const questionRes = await fetchApi(`/questions/${answer.questionId}`);
-            console.log('Question response:', questionRes);
-            if (questionRes.code === 200 && questionRes.data) {
-                const question = questionRes.data;
-                
-                const reevalRes = await fetchApi(`/answers/${answerId}/re-evaluate`, 'POST', {
-                    questionId: question.id,
-                    questionContent: question.content,
-                    answerContent: answer.content
-                });
-                console.log('Re-evaluate response:', reevalRes);
-                
-                setTimeout(() => {
-                    loadAnswerEvaluation(answerId);
-                }, 1000);
-            }
+        if (answerRes.code !== 200 || !answerRes.data) {
+            throw new Error('获取回答失败');
+        }
+        const answer = answerRes.data;
+
+        const questionRes = await fetchApi(`/questions/${answer.questionId}`);
+        if (questionRes.code !== 200 || !questionRes.data) {
+            throw new Error('获取问题失败');
+        }
+        const question = questionRes.data;
+
+        const reevalRes = await fetchApi(`/answers/${answerId}/re-evaluate`, 'POST', {
+            questionId: question.id,
+            questionContent: question.content,
+            answerContent: answer.content
+        });
+
+        // re-evaluate 是同步接口，响应里已包含评估结果，直接渲染
+        const evalData = reevalRes?.data?.data;
+        if (reevalRes?.code === 200 && reevalRes?.data?.success && evalData && evalData.score != null) {
+            contentDiv.innerHTML = `
+                <div class="eval-score-card">
+                    <div class="eval-score-row">
+                        <strong>AI评分:</strong>
+                        <span class="eval-score-num">${evalData.score}</span>
+                        <span>/ 100</span>
+                    </div>
+                    <div class="eval-score-reason">
+                        <strong>评价:</strong> ${evalData.evaluationReason || evalData.feedback || '待分析'}
+                    </div>
+                    <button class="btn-small btn-secondary" onclick="reevaluateAnswer('${answerId}')">重新评定</button>
+                </div>
+            `;
+        } else {
+            const errMsg = evalData?.errorMessage || reevalRes?.data?.errorMessage || 'AI评估失败，请重试';
+            contentDiv.innerHTML = `
+                <div class="eval-score-card">
+                    <p style="color:var(--text-light);">${errMsg}</p>
+                    <button class="btn-small btn-secondary" onclick="reevaluateAnswer('${answerId}')">重新评定</button>
+                </div>
+            `;
         }
     } catch (error) {
-        contentDiv.innerHTML = '<p style="margin:0;color:var(--text-light);">评估失败，请重试</p>';
+        contentDiv.innerHTML = `
+            <div class="eval-score-card">
+                <p style="color:var(--text-light);">评估失败：${error.message}</p>
+                <button class="btn-small btn-secondary" onclick="reevaluateAnswer('${answerId}')">重新评定</button>
+            </div>
+        `;
     }
 }
 
@@ -764,6 +817,8 @@ async function loadUsers() {
             
             if (res.code === 200 && res.data && Array.isArray(res.data)) {
                 res.data.forEach(user => {
+                    // 填充全局缓存，供其他地方按 id 查名字
+                    if (user.id) usersCache[user.id] = user;
                     const option = document.createElement('option');
                     option.value = user.id || user.username;
                     option.textContent = user.nickname || user.username;
@@ -948,6 +1003,15 @@ window.loadAnswerEvaluation = loadAnswerEvaluation;
 window.reevaluateAnswer = reevaluateAnswer;
 window.searchFromHero = searchFromHero;
 window.filterNotifications = filterNotifications;
+window.markConversationAsRead = markConversationAsRead;
+window.markNotificationAsRead = markNotificationAsRead;
+window.markAllNotificationsRead = markAllNotificationsRead;
+window.sendMessage = sendMessage;
+window.handleSendMessage = handleSendMessage;
+window.searchContacts = searchContacts;
+window.showSendMessageModal = showSendMessageModal;
+window.switchUser = switchUser;
+window.searchQuestions = searchQuestions;
 
 // ==================== Redis 功能相关函数 ====================
 
@@ -1031,15 +1095,21 @@ async function refreshActiveUsers() {
     try {
         const res = await fetchApi('/redis/users/active/top?limit=10');
         if (res.code === 200 && res.data && res.data.length > 0) {
-            container.innerHTML = res.data.map(user => `
+            container.innerHTML = res.data.map(user => {
+                const cached = usersCache[user.userId];
+                const displayName = cached
+                    ? (cached.nickname || cached.username || user.userId)
+                    : user.userId;
+                const avatarChar = displayName.charAt(0).toUpperCase();
+                return `
                 <div class="user-item">
                     <div class="user-info-display">
-                        <div class="user-avatar">${user.userId.charAt(0).toUpperCase()}</div>
-                        <span style="font-weight: 600;">${user.userId}</span>
+                        <div class="user-avatar">${avatarChar}</div>
+                        <span style="font-weight: 600;">${escapeHtml(displayName)}</span>
                     </div>
                     <div class="activity-score-badge">${user.activityScore} 次活跃</div>
-                </div>
-            `).join('');
+                </div>`;
+            }).join('');
         } else {
             container.innerHTML = '<p class="loading-text">暂无活跃用户数据</p>';
         }
@@ -1217,12 +1287,9 @@ window.syncHotViewedCache = syncHotViewedCache;
 window.syncAllRedisData = syncAllRedisData;
 
 // ========== 通知系统相关变量和函数 ==========
-let notificationPage = 0;
-const notificationPageSize = 10;
+// notificationPage / notificationPageSize 已提前到文件顶部
 
-// 当前聊天状态
-let currentChatUserId = null;
-let currentChatUserName = null;
+// 当前聊天状态（声明已提前到文件顶部）
 
 // 定时器ID
 let unreadPollingTimer = null;
@@ -1265,10 +1332,10 @@ async function fetchUnreadCounts() {
 function updateNotificationBadge(count) {
     const badge = document.getElementById('notificationBadge');
     const totalUnreadDisplay = document.getElementById('totalUnreadCount');
-    
+
     if (count > 0) {
         badge.textContent = count > 99 ? '99+' : count;
-        badge.style.display = 'inline-block';
+        badge.style.display = 'flex';
     } else {
         badge.style.display = 'none';
     }
@@ -1281,10 +1348,10 @@ function updateNotificationBadge(count) {
 // 更新私信角标
 function updateMessageBadge(count) {
     const badge = document.getElementById('messageBadge');
-    
+
     if (count > 0) {
         badge.textContent = count > 99 ? '99+' : count;
-        badge.style.display = 'inline-block';
+        badge.style.display = 'flex';
     } else {
         badge.style.display = 'none';
     }
@@ -1453,7 +1520,7 @@ function renderContactList(messages) {
                 name: otherUserName,
                 lastMessage: msg.content,
                 lastTime: msg.createTime,
-                unread: !msg.read && msg.receiverId === currentUserId ? 1 : 0
+                unread: msg.status === 'UNREAD' && msg.receiverId === currentUserId ? 1 : 0
             });
         } else {
             const contact = contactsMap.get(otherUserId);
@@ -1461,7 +1528,7 @@ function renderContactList(messages) {
                 contact.lastMessage = msg.content;
                 contact.lastTime = msg.createTime;
             }
-            if (!msg.read && msg.receiverId === currentUserId) {
+            if (msg.status === 'UNREAD' && msg.receiverId === currentUserId) {
                 contact.unread++;
             }
         }
@@ -1505,7 +1572,7 @@ async function openChat(userId, userName) {
     
     // 加载消息记录
     await loadMessages();
-    
+
     // 标记会话已读
     await markConversationAsRead();
 }
@@ -1548,10 +1615,11 @@ function renderMessages(messages) {
     
     console.log('渲染消息 - 当前用户ID:', currentUserId, '聊天对象ID:', currentChatUserId);
     
-    container.innerHTML = messages.map(msg => {
+    // API 返回最新在前，反转为最旧在前显示
+    const sorted = [...messages].reverse();
+
+    container.innerHTML = sorted.map(msg => {
         const isSelf = msg.senderId === currentUserId;
-        console.log('消息:', msg.content.substring(0, 20), '| senderId:', msg.senderId, '| isSelf:', isSelf);
-        
         return `
             <div class="message-item ${isSelf ? 'self' : 'other'}">
                 <div class="message-avatar">${isSelf ? '我' : (msg.senderName || '?')[0]}</div>
@@ -1563,9 +1631,11 @@ function renderMessages(messages) {
             </div>
         `;
     }).join('');
-    
+
     // 滚动到底部
-    container.scrollTop = container.scrollHeight;
+    requestAnimationFrame(() => {
+        container.scrollTop = container.scrollHeight;
+    });
 }
 
 // 发送消息

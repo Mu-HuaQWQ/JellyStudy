@@ -1711,6 +1711,8 @@ body::before {
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .contact-header {
@@ -1807,7 +1809,7 @@ body::before {
 .contact-time { font-size: 0.7rem; color: var(--text-light); }
 
 /* Chat window */
-.chat-window { display: flex; flex-direction: column; background: var(--surface); }
+.chat-window { display: flex; flex-direction: column; background: var(--surface); min-height: 0; overflow: hidden; }
 
 .chat-empty-state {
     flex: 1;
@@ -1831,7 +1833,14 @@ body::before {
     margin-bottom: 0.4rem; color: var(--text);
 }
 
-.chat-active { flex: 1; display: flex; flex-direction: column; height: 100%; }
+.chat-active {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+}
 
 .chat-header {
     padding: 0.9rem 1.3rem;
@@ -1840,17 +1849,22 @@ body::before {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .chat-header h3 { margin: 0; color: var(--ink); font-size: 1rem; font-weight: 700; }
 
 .messages-container {
-    flex: 1; overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
     padding: 1.3rem;
     background:
         linear-gradient(rgba(250,246,240,0.5), rgba(250,246,240,0.5)),
         radial-gradient(circle at 50% 50%, rgba(201,164,75,0.02) 0%, transparent 60%);
-    display: flex; flex-direction: column; gap: 0.7rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
 }
 
 .message-item {
@@ -1900,6 +1914,7 @@ body::before {
     border-top: 1px solid var(--border);
     display: flex; gap: 0.6rem;
     align-items: flex-end;
+    flex-shrink: 0;
 }
 
 .message-input-area textarea {
