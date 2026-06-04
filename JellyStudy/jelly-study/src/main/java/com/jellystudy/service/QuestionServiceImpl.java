@@ -302,6 +302,58 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
+    public List<Map<String, Object>> findSimilarQuestions(String questionId, int limit) {
+        Optional<Question> selfOpt = questionRepository.findById(questionId);
+        if (selfOpt.isEmpty()) {
+            return Collections.emptyList();
+        }
+        Question self = selfOpt.get();
+
+        List<Question> candidates = questionRepository.findAllNotDeletedExcluding(questionId);
+
+        List<Map<String, Object>> scored = new ArrayList<>();
+        for (Question q : candidates) {
+            double score = calculateSimilarity(self, q);
+            if (score > 0) {
+                Map<String, Object> item = new HashMap<>();
+                item.put("id", q.getId());
+                item.put("title", q.getTitle());
+                item.put("knowledgePointTitle", q.getKnowledgePointTitle() != null ? q.getKnowledgePointTitle() : "");
+                item.put("tags", q.getTags() != null ? q.getTags() : Collections.emptyList());
+                item.put("similarity", Math.round(score * 100.0) / 100.0);
+                scored.add(item);
+            }
+        }
+
+        scored.sort((a, b) -> Double.compare(
+            (Double) b.get("similarity"), (Double) a.get("similarity")));
+
+        return scored.subList(0, Math.min(limit, scored.size()));
+    }
+
+    private double calculateSimilarity(Question a, Question b) {
+        double knowledgePointScore = 0.0;
+        String kpA = a.getKnowledgePointId();
+        String kpB = b.getKnowledgePointId();
+        if (kpA != null && !kpA.isEmpty() && kpB != null && !kpB.isEmpty() && kpA.equals(kpB)) {
+            knowledgePointScore = 0.6;
+        }
+
+        double tagScore = 0.0;
+        List<String> tagsA = a.getTags() != null ? a.getTags() : Collections.emptyList();
+        List<String> tagsB = b.getTags() != null ? b.getTags() : Collections.emptyList();
+
+        if (!tagsA.isEmpty() && !tagsB.isEmpty()) {
+            long intersection = tagsA.stream().filter(tagsB::contains).count();
+            int maxSize = Math.max(tagsA.size(), tagsB.size());
+            double jaccard = (double) intersection / maxSize;
+            tagScore = jaccard * 0.4;
+        }
+
+        return knowledgePointScore + tagScore;
+    }
+
+    @Override
     public Question incrementViewCount(String questionId) {
         Optional<Question> questionOpt = questionRepository.findById(questionId);
         if (questionOpt.isPresent()) {

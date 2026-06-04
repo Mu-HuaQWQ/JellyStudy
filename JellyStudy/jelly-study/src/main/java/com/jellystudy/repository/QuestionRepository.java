@@ -42,4 +42,7 @@ public interface QuestionRepository extends MongoRepository<Question, String> {
     
     @Query(value = "{ 'isDeleted': false }", sort = "{ 'answerCount': -1, 'likeCount': -1 }")
     List<Question> findMostAnswered(Pageable pageable);
+
+    @Query("{ 'isDeleted': false, '_id': { $ne: ?0 } }")
+    List<Question> findAllNotDeletedExcluding(String excludeId);
 }

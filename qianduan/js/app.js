@@ -296,64 +296,76 @@ function renderQuestionDetail(data) {
     });
     
     const container = document.getElementById('questionDetail');
-    
+
     container.innerHTML = `
-        <div class="detail-header">
-            <h1>${escapeHtml(q.title)}</h1>
-            <div class="detail-meta">
-                <span>${q.authorName}</span>
-                <span>${q.knowledgePointTitle || '待AI分析'}</span>
-                <span>${q.viewCount} 次浏览</span>
-                <span>${answers.length} 个回答</span>
-                <span>${q.likeCount || 0} 赞</span>
-                <span>${formatDate(q.createTime)}</span>
+        <div class="detail-layout">
+            <div class="detail-main">
+                <div class="detail-header">
+                    <h1>${escapeHtml(q.title)}</h1>
+                    <div class="detail-meta">
+                        <span>${q.authorName}</span>
+                        <span>${q.knowledgePointTitle || '待AI分析'}</span>
+                        <span>${q.viewCount} 次浏览</span>
+                        <span>${answers.length} 个回答</span>
+                        <span>${q.likeCount || 0} 赞</span>
+                        <span>${formatDate(q.createTime)}</span>
+                    </div>
+                </div>
+
+                <div class="ai-evaluation-section" id="ai-evaluation-${q.id}">
+                    <div class="ai-eval-header">
+                        <h3>AI 智能评估</h3>
+                        <button class="btn-small btn-secondary" onclick="loadQuestionEvaluation('${q.id}')">刷新</button>
+                    </div>
+                    <div class="ai-eval-body" id="evaluation-content-${q.id}">
+                        <p>正在加载AI评估结果...</p>
+                    </div>
+                </div>
+
+                <div class="detail-content">${escapeHtml(q.content)}</div>
+
+                <div class="question-tags">
+                    ${(q.tags || []).map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
+                </div>
+
+                <div class="detail-actions">
+                    <button class="action-btn ${isLiked(q) ? 'liked' : ''}" onclick="toggleLikeQuestion('${q.id}')">
+                        <span class="act-icon act-like"></span> ${q.likeCount || 0}
+                    </button>
+                    <button class="action-btn" onclick="openAnswerModal('${q.id}')">
+                        <span class="act-icon act-answer"></span> 回答
+                    </button>
+                    <button class="action-btn" onclick="openCommentModal('${q.id}', 'QUESTION')">
+                        <span class="act-icon act-comment"></span> 评论
+                    </button>
+                    ${isAuthor ? '<button class="action-btn" onclick="deleteQuestion(\'' + q.id + '\')"><span class="act-icon act-delete"></span> 删除</button>' : ''}
+                </div>
+
+                <div class="answers-section">
+                    <h2>${answers.length} 个回答</h2>
+                    ${sortedAnswers.map(a => renderAnswerCard(a, acceptedAnswer, answerCommentsMap, isAuthor, q)).join('')}
+                </div>
+
+                <div class="comments-section">
+                    <h3>${questionComments.length} 条评论</h3>
+                    ${questionComments.map(c => renderCommentCard(c)).join('')}
+                    <button class="btn-secondary" onclick="openCommentModal('${q.id}', 'QUESTION')" style="margin-top:1rem;">
+                        添加评论
+                    </button>
+                </div>
             </div>
-        </div>
 
-        <div class="ai-evaluation-section" id="ai-evaluation-${q.id}">
-            <div class="ai-eval-header">
-                <h3>AI 智能评估</h3>
-                <button class="btn-small btn-secondary" onclick="loadQuestionEvaluation('${q.id}')">刷新</button>
-            </div>
-            <div class="ai-eval-body" id="evaluation-content-${q.id}">
-                <p>正在加载AI评估结果...</p>
-            </div>
-        </div>
-
-        <div class="detail-content">${escapeHtml(q.content)}</div>
-
-        <div class="question-tags">
-            ${(q.tags || []).map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
-        </div>
-
-        <div class="detail-actions">
-            <button class="action-btn ${isLiked(q) ? 'liked' : ''}" onclick="toggleLikeQuestion('${q.id}')">
-                <span class="act-icon act-like"></span> ${q.likeCount || 0}
-            </button>
-            <button class="action-btn" onclick="openAnswerModal('${q.id}')">
-                <span class="act-icon act-answer"></span> 回答
-            </button>
-            <button class="action-btn" onclick="openCommentModal('${q.id}', 'QUESTION')">
-                <span class="act-icon act-comment"></span> 评论
-            </button>
-            ${isAuthor ? '<button class="action-btn" onclick="deleteQuestion(\'' + q.id + '\')"><span class="act-icon act-delete"></span> 删除</button>' : ''}
-        </div>
-
-        <div class="answers-section">
-            <h2>${answers.length} 个回答</h2>
-            ${sortedAnswers.map(a => renderAnswerCard(a, acceptedAnswer, answerCommentsMap, isAuthor, q)).join('')}
-        </div>
-
-        <div class="comments-section">
-            <h3>${questionComments.length} 条评论</h3>
-            ${questionComments.map(c => renderCommentCard(c)).join('')}
-            <button class="btn-secondary" onclick="openCommentModal('${q.id}', 'QUESTION')" style="margin-top:1rem;">
-                添加评论
-            </button>
+            <aside class="detail-sidebar">
+                <div class="similar-questions-panel" id="similar-questions-panel">
+                    <h3>相似问题</h3>
+                    <div class="similar-loading">加载中...</div>
+                </div>
+            </aside>
         </div>
     `;
-    
+
     loadQuestionEvaluation(q.id);
+    loadSimilarQuestions(q.id);
 }
 
 async function loadQuestionEvaluation(questionId) {
@@ -387,6 +399,42 @@ async function loadQuestionEvaluation(questionId) {
         }
     } catch (error) {
         contentDiv.innerHTML = '<p style="margin:0;color:var(--text-light);">暂无评估结果，AI正在分析中...</p>';
+    }
+}
+
+async function loadSimilarQuestions(questionId) {
+    const panel = document.getElementById('similar-questions-panel');
+    if (!panel) return;
+
+    try {
+        const res = await fetchApi(`/questions/${questionId}/similar?limit=5`);
+        if (res.code === 200 && res.data && res.data.length > 0) {
+            panel.innerHTML = `
+                <h3>相似问题</h3>
+                ${res.data.map(item => `
+                    <div class="similar-item" onclick="viewQuestionDetail('${item.id}')">
+                        <div class="similar-title">${escapeHtml(item.title)}</div>
+                        ${item.knowledgePointTitle ? `<div class="similar-kp">${escapeHtml(item.knowledgePointTitle)}</div>` : ''}
+                        <div class="similar-score">
+                            <div class="similar-bar">
+                                <div class="similar-bar-fill" style="width:${Math.round(item.similarity * 100)}%"></div>
+                            </div>
+                            <span class="similar-percent">${Math.round(item.similarity * 100)}%</span>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        } else {
+            panel.innerHTML = `
+                <h3>相似问题</h3>
+                <p class="similar-empty">暂无相似问题</p>
+            `;
+        }
+    } catch (error) {
+        panel.innerHTML = `
+            <h3>相似问题</h3>
+            <p class="similar-empty">加载失败</p>
+        `;
     }
 }
 

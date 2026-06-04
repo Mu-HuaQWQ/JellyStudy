@@ -112,6 +112,14 @@ public class QuestionController {
         return ApiResponse.success(questions);
     }
 
+    @GetMapping("/{id}/similar")
+    public ApiResponse<List<Map<String, Object>>> getSimilarQuestions(
+            @PathVariable String id,
+            @RequestParam(defaultValue = "5") int limit) {
+        List<Map<String, Object>> similar = questionService.findSimilarQuestions(id, limit);
+        return ApiResponse.success(similar);
+    }
+
     @GetMapping("/author/{authorId}")
     public ApiResponse<List<Question>> getQuestionsByAuthor(@PathVariable String authorId) {
         List<Question> questions = questionService.findByAuthorId(authorId);

@@ -5,6 +5,7 @@ import com.jellystudy.entity.QuestionRequest;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface QuestionService {
@@ -42,4 +43,6 @@ public interface QuestionService {
     Question unlikeQuestion(String questionId, String userId);
     
     Question incrementViewCount(String questionId);
+
+    List<Map<String, Object>> findSimilarQuestions(String questionId, int limit);
 }
