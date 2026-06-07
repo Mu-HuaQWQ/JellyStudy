@@ -19,12 +19,17 @@ public class AIController {
     public ApiResponse<String> answerQuestion(@RequestBody Map<String, String> request) {
         String questionTitle = request.get("questionTitle");
         String questionContent = request.get("questionContent");
-        
+        String persona = request.get("persona"); // 可选，null 则用默认老师
+
         if (questionTitle == null || questionTitle.trim().isEmpty()) {
             return ApiResponse.error(400, "问题标题不能为空");
         }
-        
-        String answer = aiService.answerQuestion(questionTitle, questionContent != null ? questionContent : "");
+
+        String answer = aiService.answerQuestion(
+            questionTitle,
+            questionContent != null ? questionContent : "",
+            persona
+        );
         return ApiResponse.success(answer);
     }
 }
