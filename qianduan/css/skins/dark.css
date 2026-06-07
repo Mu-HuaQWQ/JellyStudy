@@ -1939,3 +1939,101 @@ body::before {
         margin-left: 0;
     }
 }
+/* ══════════════════════════════════════════════════════════
+   AI Q&A Page — 角色扮演 (Dark Mode)
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Top Bar ──────────────────────────────────────── */
+.ai-topbar {
+    background: var(--surface);
+    border-color: var(--border);
+}
+
+/* ── Chat Area ────────────────────────────────────── */
+.ai-chat-area {
+    background: var(--surface);
+    border-color: var(--border);
+}
+
+/* ── Chat Bubbles ─────────────────────────────────── */
+.ai-chat-ai .ai-bubble-content {
+    background: #1e1b1b;
+    border-color: #4a3f1a;
+    color: #e8d5a3;
+}
+
+.ai-chat-ai .ai-bubble-avatar {
+    background: #2d2615;
+    border-color: #4a3f1a;
+}
+
+.ai-chat-user .ai-bubble-content {
+    background: var(--bg-hover);
+}
+
+.ai-bubble-content strong {
+    color: var(--amber);
+}
+
+/* ── Input Area ───────────────────────────────────── */
+.ai-input {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--text);
+}
+
+.ai-input:focus {
+    border-color: var(--amber);
+}
+
+/* ── Inline AI on Detail Page ─────────────────────── */
+.detail-ai-inline {
+    border-color: #4a3f1a;
+    background: #1a1612;
+}
+
+.detail-ai-header:hover {
+    background: rgba(245, 158, 11, 0.08);
+}
+
+.detail-ai-body {
+    border-top-color: #4a3f1a;
+}
+
+.detail-ai-msg-ai {
+    background: #1e1b1b;
+    border-color: #4a3f1a;
+    color: #e8d5a3;
+}
+
+.detail-ai-msg-user {
+    background: var(--bg-hover);
+}
+
+.detail-ai-persona-mini {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--text);
+}
+
+.detail-ai-persona-badge {
+    background: var(--bg-hover);
+    color: var(--text-light);
+}
+
+.detail-ai-input {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--text);
+}
+
+.detail-ai-input:focus {
+    border-color: var(--amber);
+}
+
+/* ── Persona Select ───────────────────────────────── */
+.ai-persona-select {
+    background-color: var(--surface);
+    color: var(--text);
+    border-color: var(--border);
+}
