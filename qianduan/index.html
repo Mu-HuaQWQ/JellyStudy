@@ -32,6 +32,10 @@
             <span class="nav-icon nav-icon-hot"></span>
             <span>热门问题</span>
         </a>
+        <a href="#" class="sidebar-link" data-page="ai">
+            <span class="nav-icon nav-icon-ai"></span>
+            <span>AI 问答</span>
+        </a>
         <a href="#" class="sidebar-link" data-page="redis">
             <span class="nav-icon nav-icon-redis"></span>
             <span>数据面板</span>
@@ -334,6 +338,52 @@
     </section>
 
     <!-- =============================================
+         AI Q&A Page
+         ============================================= -->
+    <section id="ai-page" class="page">
+        <div class="ai-page-container">
+            <!-- 顶部栏：标题 + 角色选择器 -->
+            <div class="ai-topbar">
+                <div class="ai-topbar-left">
+                    <span class="ai-topbar-icon">🤖</span>
+                    <div>
+                        <h2 class="ai-topbar-title">AI 智能问答</h2>
+                        <p class="ai-topbar-subtitle">选择一个AI角色来回答你的问题</p>
+                    </div>
+                </div>
+                <div class="ai-topbar-right">
+                    <label class="ai-persona-label" for="aiPersonaSelect">🎭 人设：</label>
+                    <select id="aiPersonaSelect" class="ai-persona-select" onchange="onPersonaChange()">
+                        <option value="default">📚 默认老师 — 耐心专业</option>
+                        <option value="xilian">🌸 昔涟 — 浪漫俏皮的粉发少女</option>
+                        <option value="baie">☀️ 白厄 — 背负使命的烈阳少年</option>
+                        <option value="pamu">🐰 帕姆 — 傲娇可爱的列车长</option>
+                        <option value="luosigumu">⚙️ 螺丝咕姆 — 优雅理性的机械绅士</option>
+                        <option value="heita">💎 黑塔 — 毒舌高效的天才科学家</option>
+                        <option value="sushang">⚔️ 李素裳 — 热心豪爽的云骑新人</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 聊天区域 -->
+            <div class="ai-chat-area" id="aiChatArea">
+                <div class="ai-welcome" id="aiWelcome">
+                    <div class="ai-welcome-icon">🤖</div>
+                    <h3>欢迎使用 AI 智能问答</h3>
+                    <p>选择一个角色，然后输入你的问题，AI 将用该角色的风格回答你</p>
+                </div>
+            </div>
+
+            <!-- 输入区域 -->
+            <div class="ai-input-area">
+                <textarea id="aiQuestionInput" class="ai-input" placeholder="输入你的问题..." rows="2"
+                    onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiQuestion();}"></textarea>
+                <button class="btn-primary ai-send-btn" onclick="sendAiQuestion()">发送</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- =============================================
          Question Detail Page
          ============================================= -->
     <section id="detail-page" class="page">
@@ -360,6 +410,10 @@
     <a href="#" class="mobile-nav-item" data-page="messages">
         <span class="mnav-icon mnav-messages"></span>
         <span>私信</span>
+    </a>
+    <a href="#" class="mobile-nav-item" data-page="ai">
+        <span class="mnav-icon mnav-ai"></span>
+        <span>AI</span>
     </a>
     <a href="#" class="mobile-nav-item" data-page="notifications">
         <span class="mnav-icon mnav-notifications"></span>
@@ -524,7 +578,7 @@
     </div>
 </div>
 
-<script src="js/app.js?v=12"></script>
+<script src="js/app.js?v=13"></script>
 <script src="js/skin.js"></script>
 </body>
 </html>
