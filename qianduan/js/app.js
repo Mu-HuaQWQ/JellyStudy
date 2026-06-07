@@ -6,6 +6,8 @@ let currentUserName = localStorage.getItem('userName') || 'user001';
 let currentChatUserId = null;
 let currentChatUserName = null;
 
+let currentPersona = localStorage.getItem('aiPersona') || 'default'; // AI 角色人设
+
 let currentPage = 0;
 const pageSize = 10;
 
@@ -161,6 +163,9 @@ function showPage(pageName) {
             break;
         case 'redis':
             loadRedisData();
+            break;
+        case 'ai':
+            initAiPage();
             break;
         case 'notifications':
             notificationPage = 0;
@@ -416,6 +421,36 @@ function renderQuestionDetail(data) {
                 <div class="similar-questions-panel" id="similar-questions-panel">
                     <h3>相似问题</h3>
                     <div class="similar-loading">加载中...</div>
+                </div>
+                <div class="detail-ai-inline" id="detail-ai-inline">
+                    <div class="detail-ai-header" onclick="toggleDetailAi()">
+                        <div class="detail-ai-header-left">
+                            <span>🤖</span>
+                            <strong>AI 快速问答</strong>
+                            <span class="detail-ai-persona-badge" id="detail-ai-persona-badge">默认老师</span>
+                        </div>
+                        <div class="detail-ai-header-right">
+                            <select id="detailAiPersona" class="detail-ai-persona-mini" onchange="syncDetailPersona()" onclick="event.stopPropagation()">
+                                <option value="default">📚 老师</option>
+                                <option value="xilian">🌸 昔涟</option>
+                                <option value="baie">☀️ 白厄</option>
+                                <option value="pamu">🐰 帕姆</option>
+                                <option value="luosigumu">⚙️ 螺丝</option>
+                                <option value="heita">💎 黑塔</option>
+                                <option value="sushang">⚔️ 素裳</option>
+                            </select>
+                            <span id="detail-ai-toggle-icon">▸</span>
+                        </div>
+                    </div>
+                    <div class="detail-ai-body" id="detail-ai-body" style="display:none;">
+                        <div class="detail-ai-answers" id="detail-ai-answers"></div>
+                        <div class="detail-ai-input-row">
+                            <input type="text" id="detailAiInput" class="detail-ai-input"
+                                placeholder="针对此题提问..."
+                                onkeydown="if(event.key==='Enter'){event.preventDefault();sendDetailAiQuestion();}">
+                            <button class="btn-small btn-primary" onclick="sendDetailAiQuestion()">发送</button>
+                        </div>
+                    </div>
                 </div>
             </aside>
         </div>
@@ -1105,6 +1140,174 @@ function formatDate(dateString) {
     return date.toLocaleDateString('zh-CN') + ' ' + date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
 }
 
+// ══════════════════════════════════════════════════════════
+// AI Q&A Page — 角色扮演
+// ══════════════════════════════════════════════════════════
+
+function initAiPage() {
+    const select = document.getElementById('aiPersonaSelect');
+    if (select) {
+        select.value = currentPersona;
+    }
+}
+
+function onPersonaChange() {
+    const select = document.getElementById('aiPersonaSelect');
+    if (select) {
+        currentPersona = select.value;
+        localStorage.setItem('aiPersona', currentPersona);
+    }
+}
+
+async function sendAiQuestion() {
+    const input = document.getElementById('aiQuestionInput');
+    const question = input.value.trim();
+    if (!question) return;
+
+    // 隐藏欢迎语
+    const welcome = document.getElementById('aiWelcome');
+    if (welcome) welcome.style.display = 'none';
+
+    const chatArea = document.getElementById('aiChatArea');
+
+    // 添加用户消息气泡
+    const userMsg = document.createElement('div');
+    userMsg.className = 'ai-chat-bubble ai-chat-user';
+    userMsg.innerHTML = '<div class="ai-bubble-avatar">🙋</div><div class="ai-bubble-content"><p>' + escapeHtml(question) + '</p></div>';
+    chatArea.appendChild(userMsg);
+
+    // 添加 AI 加载气泡
+    const aiMsg = document.createElement('div');
+    aiMsg.className = 'ai-chat-bubble ai-chat-ai';
+    aiMsg.id = 'ai-loading-msg';
+    aiMsg.innerHTML = '<div class="ai-bubble-avatar">🤖</div><div class="ai-bubble-content"><p>正在思考...</p></div>';
+    chatArea.appendChild(aiMsg);
+
+    // 清空输入
+    input.value = '';
+    chatArea.scrollTop = chatArea.scrollHeight;
+
+    try {
+        const res = await fetchApi('/ai/answer', 'POST', {
+            questionTitle: question,
+            questionContent: '',
+            persona: currentPersona
+        });
+
+        // 移除加载气泡
+        const loadingMsg = document.getElementById('ai-loading-msg');
+        if (loadingMsg) loadingMsg.remove();
+
+        // 添加 AI 回答气泡
+        const answerMsg = document.createElement('div');
+        answerMsg.className = 'ai-chat-bubble ai-chat-ai';
+        const answerText = (res.code === 200 && res.data) ? res.data : ('AI回答失败: ' + (res.message || '未知错误'));
+        answerMsg.innerHTML = '<div class="ai-bubble-avatar">🤖</div><div class="ai-bubble-content">' + formatAiContent(answerText) + '</div>';
+        chatArea.appendChild(answerMsg);
+        chatArea.scrollTop = chatArea.scrollHeight;
+    } catch (error) {
+        const loadingMsg = document.getElementById('ai-loading-msg');
+        if (loadingMsg) loadingMsg.remove();
+
+        const errMsg = document.createElement('div');
+        errMsg.className = 'ai-chat-bubble ai-chat-ai';
+        errMsg.innerHTML = '<div class="ai-bubble-avatar">🤖</div><div class="ai-bubble-content"><p>请求失败: ' + escapeHtml(error.message) + '</p></div>';
+        chatArea.appendChild(errMsg);
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+}
+
+// 简单的 AI 内容格式化：换行转段落，**加粗**转 <strong>
+function formatAiContent(text) {
+    if (!text) return '<p>（无回答）</p>';
+    // 先转义 HTML
+    var html = escapeHtml(text);
+    // **text** → <strong>text</strong>
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // 换行 → 段落
+    var paragraphs = html.split('\n').filter(function(p) { return p.trim() !== ''; });
+    if (paragraphs.length <= 1) return '<p>' + html + '</p>';
+    return paragraphs.map(function(p) { return '<p>' + p + '</p>'; }).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+// 问题详情页 — 内嵌 AI 问答
+// ══════════════════════════════════════════════════════════
+
+function toggleDetailAi() {
+    const body = document.getElementById('detail-ai-body');
+    const icon = document.getElementById('detail-ai-toggle-icon');
+    if (body && body.style.display === 'none') {
+        body.style.display = 'block';
+        if (icon) icon.textContent = '▾';
+    } else if (body) {
+        body.style.display = 'none';
+        if (icon) icon.textContent = '▸';
+    }
+}
+
+async function sendDetailAiQuestion() {
+    const input = document.getElementById('detailAiInput');
+    if (!input) return;
+    const question = input.value.trim();
+    if (!question) return;
+
+    const body = document.getElementById('detail-ai-answers');
+    const personaSelect = document.getElementById('detailAiPersona');
+    const persona = personaSelect ? personaSelect.value : currentPersona;
+
+    // 显示用户问题
+    const userDiv = document.createElement('div');
+    userDiv.className = 'detail-ai-msg detail-ai-msg-user';
+    userDiv.innerHTML = '<strong>🙋 你：</strong>' + escapeHtml(question);
+    body.appendChild(userDiv);
+
+    // 加载中
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'detail-ai-msg detail-ai-msg-ai';
+    loadingDiv.id = 'detail-ai-loading';
+    loadingDiv.innerHTML = '<strong>🤖 AI：</strong>正在思考...';
+    body.appendChild(loadingDiv);
+
+    input.value = '';
+    body.scrollTop = body.scrollHeight;
+
+    try {
+        const res = await fetchApi('/ai/answer', 'POST', {
+            questionTitle: question,
+            questionContent: '',
+            persona: persona
+        });
+        const loadingEl = document.getElementById('detail-ai-loading');
+        if (loadingEl) loadingEl.remove();
+
+        const answerDiv = document.createElement('div');
+        answerDiv.className = 'detail-ai-msg detail-ai-msg-ai';
+        const text = (res.code === 200 && res.data) ? res.data : ('失败: ' + (res.message || ''));
+        answerDiv.innerHTML = '<strong>🤖 AI：</strong>' + formatAiContent(text);
+        body.appendChild(answerDiv);
+        body.scrollTop = body.scrollHeight;
+    } catch (error) {
+        const loadingEl = document.getElementById('detail-ai-loading');
+        if (loadingEl) loadingEl.remove();
+        const errDiv = document.createElement('div');
+        errDiv.className = 'detail-ai-msg detail-ai-msg-ai';
+        errDiv.innerHTML = '<strong>🤖 AI：</strong>请求失败: ' + escapeHtml(error.message);
+        body.appendChild(errDiv);
+    }
+}
+
+function syncDetailPersona() {
+    const mini = document.getElementById('detailAiPersona');
+    const badge = document.getElementById('detail-ai-persona-badge');
+    if (mini && badge) {
+        const text = mini.options[mini.selectedIndex].text;
+        badge.textContent = text;
+        currentPersona = mini.value;
+        localStorage.setItem('aiPersona', currentPersona);
+    }
+}
+
 window.closeModal = closeModal;
 window.showUserModal = showUserModal;
 window.viewQuestionDetail = viewQuestionDetail;
@@ -1132,6 +1335,12 @@ window.searchContacts = searchContacts;
 window.showSendMessageModal = showSendMessageModal;
 window.switchUser = switchUser;
 window.searchQuestions = searchQuestions;
+window.initAiPage = initAiPage;
+window.onPersonaChange = onPersonaChange;
+window.sendAiQuestion = sendAiQuestion;
+window.toggleDetailAi = toggleDetailAi;
+window.sendDetailAiQuestion = sendDetailAiQuestion;
+window.syncDetailPersona = syncDetailPersona;
 
 // ==================== Redis 功能相关函数 ====================
 
