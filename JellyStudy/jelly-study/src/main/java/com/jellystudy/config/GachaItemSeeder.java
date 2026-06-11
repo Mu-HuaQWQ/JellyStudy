@@ -14,14 +14,11 @@ public class GachaItemSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (gachaItemRepository.count() > 0) return;
+        // 每次启动清理旧奖池重新初始化
+        gachaItemRepository.deleteAll();
 
         // 称号类
-        gachaItemRepository.save(GachaItem.builder().name("星辰学者").type("TITLE").rarity("COMMON").fragmentsRequired(1).description("基础称号：星辰学者").enabled(true).build());
-        gachaItemRepository.save(GachaItem.builder().name("月影行者").type("TITLE").rarity("RARE").fragmentsRequired(3).description("稀有称号：月影行者").enabled(true).build());
-        gachaItemRepository.save(GachaItem.builder().name("烈焰领主").type("TITLE").rarity("EPIC").fragmentsRequired(5).description("史诗称号：烈焰领主").enabled(true).build());
-        gachaItemRepository.save(GachaItem.builder().name("苍穹霸主").type("TITLE").rarity("LEGENDARY").fragmentsRequired(10).description("传说称号：苍穹霸主").enabled(true).build());
-        gachaItemRepository.save(GachaItem.builder().name("创世神话").type("TITLE").rarity("MYTHIC").fragmentsRequired(20).description("神话称号：创世神话").enabled(true).build());
+        gachaItemRepository.save(GachaItem.builder().name("飞吧，朝向春天").type("TITLE").rarity("LEGENDARY").fragmentsRequired(10).description("传说称号：飞吧，朝向春天").enabled(true).build());
 
         // 背景类
         gachaItemRepository.save(GachaItem.builder().name("纯白背景").type("BACKGROUND").rarity("COMMON").fragmentsRequired(1).description("简洁的纯白背景").enabled(true).build());

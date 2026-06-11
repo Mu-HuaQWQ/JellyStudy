@@ -284,9 +284,31 @@ public class CreditServiceImpl implements CreditService {
                     decorationRepository.save(d);
                 }
             }
+            // 称号类型同步到用户表
+            if ("TITLE".equals(deco.getItemType())) {
+                User user = userRepository.findById(userId).orElse(null);
+                if (user != null) {
+                    if (user.getOwnedTitles() == null) user.setOwnedTitles(new java.util.ArrayList<>());
+                    if (!user.getOwnedTitles().contains(deco.getItemName())) {
+                        user.getOwnedTitles().add(deco.getItemName());
+                    }
+                    user.setDisplayTitle(deco.getItemName());
+                    userRepository.save(user);
+                }
+            }
         }
         deco.setEquipped(equip);
         decorationRepository.save(deco);
+
+        // 卸下称号时清除用户表displayTitle
+        if (!equip && "TITLE".equals(deco.getItemType())) {
+            User user = userRepository.findById(userId).orElse(null);
+            if (user != null) {
+                user.setDisplayTitle(null);
+                userRepository.save(user);
+            }
+        }
+
         return Map.of("success", true, "equipped", equip);
     }
 

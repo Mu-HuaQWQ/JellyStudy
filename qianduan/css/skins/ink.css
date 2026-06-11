@@ -3121,3 +3121,33 @@ body::before {
 
 .profile-credit-actions { margin-top: 16px; text-align: center; }
 
+/* ══════════════════════════════════════════════════════════
+   Equippable Backgrounds
+   ══════════════════════════════════════════════════════════ */
+
+body.bg-纯白背景 { background: #fafafa !important; }
+body.bg-星空背景 { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e) !important; }
+body.bg-竹林背景 { background: linear-gradient(180deg, #d4e9c3, #a8d5a2, #6b8f5e) !important; }
+body.bg-银河背景 { background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460) !important; }
+body.bg-极光背景 { background: linear-gradient(135deg, #0d1b2a, #1b2838, #1a3a4a, #2d5a5a) !important; }
+
+/* ══════════════════════════════════════════════════════════
+   Equippable Chatboxes
+   ══════════════════════════════════════════════════════════ */
+
+/* 简约边框 */
+body.cb-简约边框 .messages-container,
+body.cb-简约边框 .ai-chat-area { border: 2px solid #d1d5db !important; border-radius: 4px !important; }
+/* 花藤边框 */
+body.cb-花藤边框 .messages-container,
+body.cb-花藤边框 .ai-chat-area { border: 3px solid #10b981 !important; border-radius: 16px !important; box-shadow: 0 0 12px rgba(16,185,129,0.2); }
+/* 流光边框 */
+body.cb-流光边框 .messages-container,
+body.cb-流光边框 .ai-chat-area { border: 2px solid transparent !important; border-radius: 12px !important; background-clip: padding-box; }
+/* 龙纹边框 */
+body.cb-龙纹边框 .messages-container,
+body.cb-龙纹边框 .ai-chat-area { border: 3px solid #f59e0b !important; border-radius: 8px !important; box-shadow: 0 0 16px rgba(245,158,11,0.3); }
+/* 神谕边框 */
+body.cb-神谕边框 .messages-container,
+body.cb-神谕边框 .ai-chat-area { border: 3px solid #8b5cf6 !important; border-radius: 12px !important; box-shadow: 0 0 20px rgba(139,92,246,0.4); }
+

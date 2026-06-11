@@ -41,6 +41,7 @@ function initApp() {
     heartbeatOnline();
     // 每2分钟上报一次在线心跳
     setInterval(heartbeatOnline, 2 * 60 * 1000);
+    loadEquippedStyles();
 }
 
 function heartbeatOnline() {
@@ -1829,12 +1830,30 @@ async function toggleEquip(decoId, equip) {
         var res = await fetchApi('/credits/equip', 'POST', { userId: currentUserId, decorationId: decoId, equip: equip });
         if (res.code === 200 && res.data && res.data.success) {
             loadDecorations();
+            setTimeout(function() { location.reload(); }, 500);
         } else {
             alert('操作失败');
         }
     } catch (e) {
         alert('请求失败：' + e.message);
     }
+}
+
+async function loadEquippedStyles() {
+    try {
+        var res = await fetchApi('/credits/decorations/' + currentUserId);
+        if (res.code === 200 && res.data) {
+            res.data.forEach(function(d) {
+                if (d.equipped) {
+                    if (d.itemType === 'BACKGROUND') {
+                        document.body.classList.add('bg-' + d.itemName);
+                    } else if (d.itemType === 'CHATBOX') {
+                        document.body.classList.add('cb-' + d.itemName);
+                    }
+                }
+            });
+        }
+    } catch (e) {}
 }
 
 window.closeModal = closeModal;
