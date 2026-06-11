@@ -2037,3 +2037,23 @@ body::before {
     color: var(--text);
     border-color: var(--border);
 }
+
+/* ══════════════════════════════════════════════════════════
+   Question Bank (Dark Mode)
+   ══════════════════════════════════════════════════════════ */
+
+.qb-card { background: var(--surface); border-color: var(--border); }
+.qb-option { background: var(--surface); border-color: var(--border); }
+.qb-option:hover { background: #2d2615; }
+.qb-correct { background: #064e3b; border-color: #059669; color: #6ee7b7; }
+.qb-wrong { background: #450a0a; border-color: #dc2626; color: #fca5a5; }
+.qb-answer { background: #064e3b; border-color: #059669; }
+.qb-answer-correct { color: #6ee7b7; }
+.qb-challenge-card { background: var(--surface); border-color: var(--border); }
+.qb-challenge-option { background: var(--surface); border-color: var(--border); color: var(--text); }
+.qb-challenge-option:hover { border-color: var(--amber); background: #2d2615; }
+.qb-challenge-selected { border-color: var(--amber); background: #2d2615; }
+.qb-result-summary { background: #2d2615; }
+.qb-result-correct { background: #064e3b; border-color: #059669; }
+.qb-result-wrong { background: #450a0a; border-color: #dc2626; }
+.qb-result-right { color: #6ee7b7; }
