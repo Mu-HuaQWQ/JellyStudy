@@ -253,7 +253,7 @@ public class CreditServiceImpl implements CreditService {
             m.put("synthesizeRequired", required);
             m.put("canSynthesize", f.getCount() >= required);
             return m;
-        }).toList();
+        }).collect(Collectors.toList());
     }
 
     @Override
@@ -267,7 +267,7 @@ public class CreditServiceImpl implements CreditService {
             m.put("rarity", d.getRarity());
             m.put("equipped", d.isEquipped());
             return m;
-        }).toList();
+        }).collect(Collectors.toList());
     }
 
     @Override
