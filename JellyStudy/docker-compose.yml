@@ -99,13 +99,15 @@ services:
       dockerfile: Dockerfile
     container_name: jelly-study-evaluation
     ports:
-      - "8089:8087"
+      - "8089:8089"
       - "20882:20881"
     environment:
       - SPRING_DATA_MONGODB_HOST=host.docker.internal
       - SPRING_DATA_MONGODB_PORT=27017
       - SPRING_CLOUD_NACOS_DISCOVERY_SERVER-ADDR=nacos:8848
       - SPRING_CLOUD_NACOS_CONFIG_SERVER-ADDR=nacos:8848
+      - DUBBO_REGISTRY_ADDRESS=nacos://nacos:8848
+      - NACOS_ADDR=nacos:8848
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
