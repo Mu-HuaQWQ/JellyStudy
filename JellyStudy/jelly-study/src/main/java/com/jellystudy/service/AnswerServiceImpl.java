@@ -38,6 +38,9 @@ public class AnswerServiceImpl implements AnswerService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private CreditService creditService;
+
     @Override
     public Answer create(AnswerRequest answerRequest, String authorId, String authorName) {
         Optional<Question> questionOpt = questionRepository.findById(answerRequest.getQuestionId());
@@ -106,6 +109,16 @@ public class AnswerServiceImpl implements AnswerService {
             future.thenAccept(result -> {
                 if (result != null && Boolean.TRUE.equals(result.get("success"))) {
                     logger.info("Answer evaluation completed for answer: {}", answer.getId());
+                    // 根据AI评分发放信用点（评分/10）
+                    Map<String, Object> data = (Map<String, Object>) result.get("data");
+                    if (data != null) {
+                        Object scoreObj = data.get("score");
+                        int score = scoreObj instanceof Number ? ((Number) scoreObj).intValue() : 50;
+                        int credits = Math.max(1, score / 10);
+                        creditService.earnCredits(answer.getAuthorId(), credits,
+                            "AI评分奖励（" + score + "分）");
+                        logger.info("Awarded {} credits for answer {} (score: {})", credits, answer.getId(), score);
+                    }
                 } else {
                     logger.warn("Answer evaluation failed for answer: {}", answer.getId());
                 }
@@ -242,6 +255,8 @@ public class AnswerServiceImpl implements AnswerService {
                         answerId,
                         likerName
                     );
+                    // 点赞给回答者+1信用点
+                    creditService.earnCredits(answer.getAuthorId(), 1, "回答被点赞");
                 }
 
                 return saved;

@@ -43,6 +43,9 @@ public class QuestionServiceImpl implements QuestionService {
     @Autowired
     private RedisService redisService;
 
+    @Autowired
+    private CreditService creditService;
+
     @Override
     public Question create(QuestionRequest questionRequest, String authorId, String authorName) {
         String knowledgePointId = questionRequest.getKnowledgePointId();
@@ -82,9 +85,12 @@ public class QuestionServiceImpl implements QuestionService {
         }
         
         logger.info("Question created successfully: {}", savedQuestion.getId());
-        
+
+        // 发布问题+5信用点
+        creditService.earnCredits(authorId, 5, "发布问题");
+
         evaluateAndLinkKnowledgePoint(savedQuestion);
-        
+
         return savedQuestion;
     }
 
@@ -277,6 +283,11 @@ public class QuestionServiceImpl implements QuestionService {
 
                 redisService.incrementQuestionPopularity(questionId);
                 redisService.recordUserActivity(userId, "LIKE");
+
+                // 非自赞，给提问者+1信用点
+                if (!userId.equals(question.getAuthorId())) {
+                    creditService.earnCredits(question.getAuthorId(), 1, "问题被点赞");
+                }
 
                 return saved;
             }

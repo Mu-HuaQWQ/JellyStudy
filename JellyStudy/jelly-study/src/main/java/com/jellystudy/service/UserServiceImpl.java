@@ -45,6 +45,15 @@ public class UserServiceImpl implements UserService {
         if (user.getDisplayTitle() == null) {
             user.setDisplayTitle("newbie");
         }
+        if (user.getCreditPoints() == null) {
+            user.setCreditPoints(0);
+        }
+        if (user.getTotalSpent() == null) {
+            user.setTotalSpent(0);
+        }
+        if (user.getLevel() == null) {
+            user.setLevel(0);
+        }
         return userRepository.save(user);
     }
 

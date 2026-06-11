@@ -73,7 +73,10 @@ public class QuestionBankController {
 
     /** 闯关提交 */
     @PostMapping("/submit")
-    public ApiResponse<List<Map<String, Object>>> submitAnswers(@RequestBody List<Map<String, String>> submissions) {
-        return ApiResponse.success(questionBankService.submitAnswers(submissions));
+    public ApiResponse<List<Map<String, Object>>> submitAnswers(@RequestBody Map<String, Object> req) {
+        String userId = (String) req.get("userId");
+        @SuppressWarnings("unchecked")
+        List<Map<String, String>> submissions = (List<Map<String, String>>) req.get("submissions");
+        return ApiResponse.success(questionBankService.submitAnswers(userId, submissions));
     }
 }

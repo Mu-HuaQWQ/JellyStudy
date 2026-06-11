@@ -28,5 +28,5 @@ public interface QuestionBankService {
     Map<String, Object> checkAnswer(String questionId, String userAnswer);
 
     /** 闯关模式提交整组答案，第一项为 {total, correct, score} 汇总 */
-    List<Map<String, Object>> submitAnswers(List<Map<String, String>> submissions);
+    List<Map<String, Object>> submitAnswers(String userId, List<Map<String, String>> submissions);
 }

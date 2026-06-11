@@ -1550,7 +1550,10 @@ async function submitChallenge() {
     });
 
     try {
-        var res = await fetchApi('/question-bank/submit', 'POST', submissions);
+        var res = await fetchApi('/question-bank/submit', 'POST', {
+            userId: currentUserId,
+            submissions: submissions
+        });
         if (res.code === 200 && res.data) {
             renderChallengeResult(res.data);
         } else {

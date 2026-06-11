@@ -3,19 +3,35 @@ package com.jellystudy.service;
 import com.jellystudy.entity.QuestionBankItem;
 import com.jellystudy.repository.QuestionBankItemRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Duration;
+import java.time.LocalDate;
 import java.util.*;
 
 @Service
 public class QuestionBankServiceImpl implements QuestionBankService {
 
+    private static final Logger logger = LoggerFactory.getLogger(QuestionBankServiceImpl.class);
+
     @Autowired
     private QuestionBankItemRepository repository;
+
+    @Autowired
+    private CreditService creditService;
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    private static final int QUIZ_DAILY_MAX_CREDITS = 100;   // 每日题库信用点上限
+    private static final int CREDITS_PER_CORRECT = 5;        // 每题正确得分
 
     @Value("${ai.deepseek.api-key}")
     private String apiKey;
@@ -173,7 +189,7 @@ public class QuestionBankServiceImpl implements QuestionBankService {
     }
 
     @Override
-    public List<Map<String, Object>> submitAnswers(List<Map<String, String>> submissions) {
+    public List<Map<String, Object>> submitAnswers(String userId, List<Map<String, String>> submissions) {
         List<Map<String, Object>> results = new ArrayList<>();
         int correctCount = 0;
         for (Map<String, String> sub : submissions) {
@@ -188,7 +204,40 @@ public class QuestionBankServiceImpl implements QuestionBankService {
         summary.put("total", submissions.size());
         summary.put("correct", correctCount);
         summary.put("score", submissions.size() > 0 ? correctCount * 100 / submissions.size() : 0);
+
+        // 发放题库答题信用点（每日上限）
+        if (userId != null && !userId.isBlank() && correctCount > 0) {
+            int awarded = awardQuizCredits(userId, correctCount);
+            summary.put("creditsEarned", awarded);
+        }
+
         results.add(0, summary);
         return results;
+    }
+
+    /** 题库答题赚信用点，Redis key daily_quiz:{userId}:{date} 记录当天已得 */
+    private int awardQuizCredits(String userId, int correctCount) {
+        try {
+            String today = LocalDate.now().toString();
+            String redisKey = "daily_quiz:" + userId + ":" + today;
+
+            Object cached = redisTemplate.opsForValue().get(redisKey);
+            int alreadyEarned = cached instanceof Number ? ((Number) cached).intValue() : 0;
+
+            int available = Math.max(0, QUIZ_DAILY_MAX_CREDITS - alreadyEarned);
+            int toAward = Math.min(available, correctCount * CREDITS_PER_CORRECT);
+
+            if (toAward > 0) {
+                redisTemplate.opsForValue().set(redisKey, alreadyEarned + toAward,
+                    Duration.ofDays(1));
+                creditService.earnCredits(userId, toAward,
+                    "题库答题正确+" + toAward + "（今日累计" + (alreadyEarned + toAward) + "/" + QUIZ_DAILY_MAX_CREDITS + "）");
+                logger.info("Awarded {} quiz credits to user {} (daily total: {})", toAward, userId, alreadyEarned + toAward);
+            }
+            return toAward;
+        } catch (Exception e) {
+            logger.error("Error awarding quiz credits: {}", e.getMessage());
+            return 0;
+        }
     }
 }
