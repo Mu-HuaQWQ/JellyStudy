@@ -1663,6 +1663,7 @@ window.nextChallengeQuestion = nextChallengeQuestion;
 window.toggleQbAnswer = toggleQbAnswer;
 window.selectQbOption = selectQbOption;
 window.showAddQuestionForm = showAddQuestionForm;
+window.loadLearningReport = loadLearningReport;
 
 // ==================== Redis 功能相关函数 ====================
 
@@ -2351,6 +2352,9 @@ function switchProfileTab(tab) {
         case 'titles':
             loadProfileTitles();
             break;
+        case 'report':
+            loadLearningReport('weekly');
+            break;
     }
 }
 
@@ -2637,6 +2641,68 @@ async function wearTitle(code) {
     } catch (e) {
         alert('请求失败: ' + e.message);
     }
+}
+
+async function loadLearningReport(type) {
+    var container = document.getElementById('profileTabContent');
+    container.innerHTML = '<p class="loading-text">加载中...</p>';
+
+    // 渲染子标签
+    var subTabs = '<div class="report-subtabs">' +
+        '<button class="report-subtab ' + (type === 'weekly' ? 'active' : '') + '" onclick="loadLearningReport(\'weekly\')">📅 周报</button>' +
+        '<button class="report-subtab ' + (type === 'monthly' ? 'active' : '') + '" onclick="loadLearningReport(\'monthly\')">📆 月报</button>' +
+        '<button class="report-subtab ' + (type === 'yearly' ? 'active' : '') + '" onclick="loadLearningReport(\'yearly\')">📊 年报</button>' +
+        '</div>';
+
+    try {
+        var res = await fetchApi('/users/' + currentUserId + '/report?type=' + type);
+        if (res.code === 200 && res.data) {
+            container.innerHTML = subTabs + renderReportCards(res.data, type);
+        } else {
+            container.innerHTML = subTabs + '<p class="profile-empty">加载失败：' + (res.message || '') + '</p>';
+        }
+    } catch (e) {
+        container.innerHTML = subTabs + '<p class="profile-empty">加载失败</p>';
+    }
+}
+
+function renderReportCards(data, type) {
+    // 鼓励语
+    var encouragements = {
+        'weekly': '这周你问了<strong>' + data.questionsAsked + '</strong>道题目，学海无涯，真是努力！',
+        'monthly': '这个月你回答了<strong>' + data.answersGiven + '</strong>道题目，帮助了很多人！',
+        'yearly': '这一年你活跃了<strong>' + data.activeDays + '</strong>天，日月照亮知识的前路！'
+    };
+    var msg = encouragements[type] || encouragements['weekly'];
+
+    var html = '<div class="report-encourage">' + msg + '</div>';
+
+    html += '<div class="report-grid">';
+
+    // 卡片数据
+    var cards = [
+        { icon: '❓', label: '提问数', value: data.questionsAsked, color: 'report-blue' },
+        { icon: '✏️', label: '回答数', value: data.answersGiven, color: 'report-green' },
+        { icon: '👍', label: '获赞数', value: data.likesReceived, color: 'report-amber' },
+        { icon: '📅', label: '活跃天数', value: data.activeDays, color: 'report-purple' },
+        { icon: '🕐', label: '最晚在线', value: data.latestOnlineTime || '暂无', color: 'report-teal' },
+        { icon: '🏅', label: '当前称号', value: (data.earnedTitles || []).join(', ') || '新人', color: 'report-rose' }
+    ];
+
+    cards.forEach(function(c) {
+        html += '<div class="report-card ' + c.color + '">' +
+            '<div class="report-card-icon">' + c.icon + '</div>' +
+            '<div class="report-card-value">' + c.value + '</div>' +
+            '<div class="report-card-label">' + c.label + '</div>' +
+        '</div>';
+    });
+
+    html += '</div>';
+
+    // 日期范围
+    html += '<p class="report-daterange">📊 统计周期：' + (data.dateRange || '') + ' ｜ ' + (data.period || '') + '</p>';
+
+    return html;
 }
 
 // ═══════════════════════════════════════════════════════
