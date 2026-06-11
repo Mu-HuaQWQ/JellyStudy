@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class CreditServiceImpl implements CreditService {
@@ -109,7 +110,7 @@ public class CreditServiceImpl implements CreditService {
         String rarity = rollRarity(pityEpic, pityLegendary);
         List<GachaItem> filtered = pool.stream()
             .filter(i -> i.getRarity().equals(rarity))
-            .toList();
+            .collect(Collectors.toList());
 
         if (filtered.isEmpty()) {
             filtered = pool;
