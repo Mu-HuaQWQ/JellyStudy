@@ -16,6 +16,8 @@ let qbChallengeQuestions = [];
 let qbChallengeIndex = 0;
 let qbChallengeAnswers = [];
 
+let gachaCurrentTab = 'fragments';
+
 let currentPage = 0;
 const pageSize = 10;
 
@@ -184,6 +186,9 @@ function showPage(pageName) {
             break;
         case 'profile':
             loadProfile();
+            break;
+        case 'gacha':
+            loadGachaPage();
             break;
         case 'questionbank':
             break;
@@ -1620,6 +1625,211 @@ function showAddQuestionForm() {
     }).catch(function(e) { alert('请求失败：' + e.message); });
 }
 
+// ══════════════════════════════════════════════════════════
+// 信用点系统 — 抽卡、碎片、装饰
+// ══════════════════════════════════════════════════════════
+
+async function loadCreditInfo() {
+    try {
+        var res = await fetchApi('/credits/user/' + currentUserId);
+        if (res.code === 200 && res.data) {
+            var el = document.getElementById('profileCredits');
+            if (el) el.textContent = res.data.creditPoints || 0;
+            el = document.getElementById('profileLevel');
+            if (el) el.textContent = 'Lv' + (res.data.level || 0);
+        }
+    } catch (e) {}
+}
+
+async function loadGachaPage() {
+    try {
+        var res = await fetchApi('/credits/user/' + currentUserId);
+        if (res.code === 200 && res.data) {
+            document.getElementById('gachaCredits').textContent = res.data.creditPoints || 0;
+            document.getElementById('gachaLevel').textContent = 'Lv' + (res.data.level || 0);
+
+            // 等级进度条
+            var level = res.data.level || 0;
+            var totalSpent = res.data.totalSpent || 0;
+            var thresholds = [0, 1000, 2000, 4000, 8000, 16000, 32000];
+            var currentMin = thresholds[level];
+            var nextMax = level < 6 ? thresholds[level + 1] : thresholds[level];
+            var progress = level >= 6 ? 100 : Math.floor((totalSpent - currentMin) / (nextMax - currentMin) * 100);
+            document.getElementById('gachaLevelFill').style.width = Math.min(100, Math.max(0, progress)) + '%';
+            document.getElementById('gachaNextLevel').textContent = level >= 6 ? 'MAX' : (nextMax - totalSpent) + ' 升级';
+
+            document.getElementById('gachaBtn1').textContent = '🎲 单抽 (' + (res.data.gachaCost || 160) + ')';
+            document.getElementById('gachaBtn10').textContent = '🎰 十连抽 (' + ((res.data.gachaCost || 160) * 10) + ')';
+        }
+    } catch (e) {}
+
+    switchGachaTab('fragments');
+}
+
+function switchGachaTab(tab) {
+    gachaCurrentTab = tab;
+    document.querySelectorAll('.gacha-tab').forEach(function(t) { t.classList.remove('active'); });
+    var tabBtn = document.querySelector('[data-gtab="' + tab + '"]');
+    if (tabBtn) tabBtn.classList.add('active');
+    document.getElementById('gachaFragments').style.display = tab === 'fragments' ? 'block' : 'none';
+    document.getElementById('gachaDecorations').style.display = tab === 'decorations' ? 'block' : 'none';
+
+    if (tab === 'fragments') loadFragments();
+    else loadDecorations();
+}
+
+async function doGacha(times) {
+    var cost = times === 10 ? 1600 : 160;
+    if (!confirm('确认消耗 ' + cost + ' 信用点进行' + (times === 10 ? '十连抽' : '单抽') + '？')) return;
+
+    var resultDiv = document.getElementById('gachaResult');
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = '<p class="loading-text">抽卡中...</p>';
+
+    try {
+        var res = await fetchApi('/credits/gacha', 'POST', { userId: currentUserId, times: times });
+        if (res.code === 200 && res.data) {
+            renderGachaResult(res.data);
+            loadGachaPage(); // 刷新余额
+        } else {
+            resultDiv.innerHTML = '<p class="error-state">抽卡失败：' + (res.message || '') + '</p>';
+        }
+    } catch (e) {
+        resultDiv.innerHTML = '<p class="error-state">请求失败：' + e.message + '</p>';
+    }
+}
+
+function renderGachaResult(data) {
+    var resultDiv = document.getElementById('gachaResult');
+    var summary = data[0];
+    var pulls = data.slice(1);
+
+    if (summary.error) {
+        resultDiv.innerHTML = '<p class="error-state">' + summary.error + '</p>';
+        return;
+    }
+
+    var rarityNames = { 'COMMON': '普通', 'RARE': '优秀', 'EPIC': '精良', 'LEGENDARY': '史诗', 'MYTHIC': '传说' };
+    var rarityColors = { 'COMMON': '#9ca3af', 'RARE': '#3b82f6', 'EPIC': '#8b5cf6', 'LEGENDARY': '#f59e0b', 'MYTHIC': '#ef4444' };
+
+    var html = '';
+    if (summary.leveledUp) {
+        html += '<div class="gacha-levelup">🎉 升级了！当前等级 Lv' + summary.level + '</div>';
+    }
+
+    html += '<div class="gacha-pull-grid">';
+    pulls.forEach(function(p) {
+        if (p.error) return;
+        var color = rarityColors[p.rarity] || '#9ca3af';
+        var rname = rarityNames[p.rarity] || p.rarity;
+        html += '<div class="gacha-pull-card" style="border-color:' + color + ';">' +
+            '<div class="gacha-pull-rarity" style="color:' + color + ';">' + rname + '</div>' +
+            '<div class="gacha-pull-name">' + escapeHtml(p.itemName) + '</div>' +
+            '<div class="gacha-pull-type">' + escapeHtml(p.itemType) + '</div>' +
+            (p.isFullItem ? '<div class="gacha-pull-full">✨ 本体!</div>' : '<div class="gacha-pull-frag">碎片 x' + p.fragmentCount + '</div>') +
+            (p.canSynthesize ? '<div class="gacha-pull-synth">可合成!</div>' : '') +
+        '</div>';
+    });
+    html += '</div>';
+    html += '<p style="text-align:center;margin-top:8px;">余额：' + summary.balance + ' 信用点 | 等级：Lv' + summary.level + '</p>';
+
+    resultDiv.innerHTML = html;
+    switchGachaTab('fragments');
+}
+
+async function loadFragments() {
+    var container = document.getElementById('gachaFragments');
+    container.innerHTML = '<p class="loading-text">加载中...</p>';
+    try {
+        var res = await fetchApi('/credits/fragments/' + currentUserId);
+        if (res.code === 200 && res.data) {
+            renderFragments(res.data);
+        } else {
+            container.innerHTML = '<p class="empty-state">暂无碎片</p>';
+        }
+    } catch (e) {
+        container.innerHTML = '<p class="error-state">加载失败</p>';
+    }
+}
+
+function renderFragments(fragments) {
+    var container = document.getElementById('gachaFragments');
+    if (!fragments || fragments.length === 0) {
+        container.innerHTML = '<p class="empty-state">暂无碎片，去抽卡吧！</p>';
+        return;
+    }
+    container.innerHTML = fragments.map(function(f) {
+        return '<div class="frag-card">' +
+            '<div class="frag-info">' +
+                '<strong>' + escapeHtml(f.itemName) + '</strong>' +
+                '<span class="frag-type">' + escapeHtml(f.itemType) + ' | ' + escapeHtml(f.rarity) + '</span>' +
+            '</div>' +
+            '<div class="frag-count">' + f.count + ' / ' + f.synthesizeRequired + '</div>' +
+            (f.canSynthesize ? '<button class="btn-small btn-primary" onclick="doSynthesize(\'' + f.itemId + '\')">合成</button>' : '') +
+        '</div>';
+    }).join('');
+}
+
+async function loadDecorations() {
+    var container = document.getElementById('gachaDecorations');
+    container.innerHTML = '<p class="loading-text">加载中...</p>';
+    try {
+        var res = await fetchApi('/credits/decorations/' + currentUserId);
+        if (res.code === 200 && res.data) {
+            renderDecorations(res.data);
+        } else {
+            container.innerHTML = '<p class="empty-state">暂无装饰</p>';
+        }
+    } catch (e) {
+        container.innerHTML = '<p class="error-state">加载失败</p>';
+    }
+}
+
+function renderDecorations(decorations) {
+    var container = document.getElementById('gachaDecorations');
+    if (!decorations || decorations.length === 0) {
+        container.innerHTML = '<p class="empty-state">暂无装饰，通过抽卡或合成获得！</p>';
+        return;
+    }
+    container.innerHTML = decorations.map(function(d) {
+        return '<div class="deco-card ' + (d.equipped ? 'deco-equipped' : '') + '">' +
+            '<div class="deco-info">' +
+                '<strong>' + escapeHtml(d.itemName) + '</strong>' +
+                '<span class="deco-type">' + escapeHtml(d.itemType) + ' | ' + escapeHtml(d.rarity) + '</span>' +
+            '</div>' +
+            '<button class="btn-small ' + (d.equipped ? 'btn-secondary' : 'btn-primary') + '" onclick="toggleEquip(\'' + d.id + '\', ' + !d.equipped + ')">' + (d.equipped ? '卸下' : '佩戴') + '</button>' +
+        '</div>';
+    }).join('');
+}
+
+async function doSynthesize(itemId) {
+    if (!confirm('确认合成？碎片将被消耗。')) return;
+    try {
+        var res = await fetchApi('/credits/synthesize', 'POST', { userId: currentUserId, itemId: itemId });
+        if (res.code === 200 && res.data && res.data.success) {
+            alert(res.data.message || '合成成功！');
+            loadFragments();
+        } else {
+            alert('合成失败：' + ((res.data && res.data.message) || res.message || ''));
+        }
+    } catch (e) {
+        alert('请求失败：' + e.message);
+    }
+}
+
+async function toggleEquip(decoId, equip) {
+    try {
+        var res = await fetchApi('/credits/equip', 'POST', { userId: currentUserId, decorationId: decoId, equip: equip });
+        if (res.code === 200 && res.data && res.data.success) {
+            loadDecorations();
+        } else {
+            alert('操作失败');
+        }
+    } catch (e) {
+        alert('请求失败：' + e.message);
+    }
+}
+
 window.closeModal = closeModal;
 window.showUserModal = showUserModal;
 window.viewQuestionDetail = viewQuestionDetail;
@@ -1664,6 +1874,11 @@ window.toggleQbAnswer = toggleQbAnswer;
 window.selectQbOption = selectQbOption;
 window.showAddQuestionForm = showAddQuestionForm;
 window.loadLearningReport = loadLearningReport;
+window.doGacha = doGacha;
+window.switchGachaTab = switchGachaTab;
+window.doSynthesize = doSynthesize;
+window.toggleEquip = toggleEquip;
+window.loadGachaPage = loadGachaPage;
 
 // ==================== Redis 功能相关函数 ====================
 
@@ -2322,6 +2537,7 @@ async function loadProfile() {
 
         // 加载当前激活的 tab
         switchProfileTab(currentProfileTab);
+        loadCreditInfo();
     } catch (e) {
         alert('请求失败: ' + e.message);
     }

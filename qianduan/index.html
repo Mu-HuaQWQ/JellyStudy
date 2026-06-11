@@ -319,6 +319,14 @@
                         <span class="profile-stat-num" id="profileAnswers">0</span>
                         <span class="profile-stat-label">回答</span>
                     </div>
+                    <div class="profile-stat">
+                        <span class="profile-stat-num" id="profileCredits">0</span>
+                        <span class="profile-stat-label">信用点</span>
+                    </div>
+                    <div class="profile-stat">
+                        <span class="profile-stat-num" id="profileLevel">Lv0</span>
+                        <span class="profile-stat-label">等级</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -335,6 +343,46 @@
 
         <div class="profile-tab-content" id="profileTabContent">
             <p class="loading-text">加载中...</p>
+        </div>
+        <div class="profile-credit-actions" style="margin-top:16px; text-align:center;">
+            <button class="btn-primary" onclick="showPage('gacha'); loadGachaPage();">🎰 进入抽卡</button>
+        </div>
+    </section>
+
+    <!-- =============================================
+         Gacha Page (抽卡)
+         ============================================= -->
+    <section id="gacha-page" class="page">
+        <div class="gacha-container">
+            <button class="btn-back" onclick="showPage('profile')">&larr; 返回个人中心</button>
+
+            <div class="gacha-header">
+                <div class="gacha-credit-display">
+                    <span class="gacha-credit-icon">💰</span>
+                    <span class="gacha-credit-value" id="gachaCredits">0</span>
+                    <span class="gacha-credit-label">信用点</span>
+                </div>
+                <div class="gacha-level-display">
+                    <span id="gachaLevel">Lv0</span>
+                    <div class="gacha-level-bar"><div class="gacha-level-fill" id="gachaLevelFill"></div></div>
+                    <span id="gachaNextLevel"></span>
+                </div>
+            </div>
+
+            <div class="gacha-actions">
+                <button class="btn-primary gacha-btn" onclick="doGacha(1)" id="gachaBtn1">🎲 单抽 (160)</button>
+                <button class="btn-primary gacha-btn gacha-btn-10" onclick="doGacha(10)" id="gachaBtn10">🎰 十连抽 (1600)</button>
+            </div>
+
+            <div class="gacha-result" id="gachaResult" style="display:none;"></div>
+
+            <div class="gacha-tabs">
+                <button class="gacha-tab active" data-gtab="fragments" onclick="switchGachaTab('fragments')">💎 碎片背包</button>
+                <button class="gacha-tab" data-gtab="decorations" onclick="switchGachaTab('decorations')">🎁 我的装饰</button>
+            </div>
+
+            <div class="gacha-tab-content" id="gachaFragments"></div>
+            <div class="gacha-tab-content" id="gachaDecorations" style="display:none;"></div>
         </div>
     </section>
 
@@ -622,7 +670,7 @@
     </div>
 </div>
 
-<script src="js/app.js?v=16"></script>
+<script src="js/app.js?v=17"></script>
 <script src="js/skin.js"></script>
 </body>
 </html>
