@@ -41,6 +41,9 @@ docker-build.log
 # External repos
 skills/
 
+# Document files
+*.docx
+
 # Package files
 *.zip
 *.tar.gz
