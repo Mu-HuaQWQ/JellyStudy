@@ -317,6 +317,9 @@ function renderKnowledgePoints(knowledgePoints) {
                 <span>难度: ${kp.difficulty || '未评估'}</span>
                 <span>问题数: ${kp.questionCount || 0}</span>
             </div>
+            <button class="btn-small btn-qb" onclick="event.stopPropagation(); openQuestionBank('${kp.id}', '${escapeHtml(kp.title)}', '${escapeHtml(kp.content || '')}')" style="margin-top:8px;">
+                📝 题库
+            </button>
         </div>
     `).join('');
 }
@@ -427,17 +430,17 @@ function renderQuestionDetail(data) {
                         <div class="detail-ai-header-left">
                             <span>🤖</span>
                             <strong>AI 快速问答</strong>
-                            <span class="detail-ai-persona-badge" id="detail-ai-persona-badge">默认老师</span>
+                            <span class="detail-ai-persona-badge" id="detail-ai-persona-badge">老师</span>
                         </div>
                         <div class="detail-ai-header-right">
                             <select id="detailAiPersona" class="detail-ai-persona-mini" onchange="syncDetailPersona()" onclick="event.stopPropagation()">
                                 <option value="default">📚 老师</option>
-                                <option value="xilian">🌸 昔涟</option>
-                                <option value="baie">☀️ 白厄</option>
-                                <option value="pamu">🐰 帕姆</option>
-                                <option value="luosigumu">⚙️ 螺丝</option>
-                                <option value="heita">💎 黑塔</option>
-                                <option value="sushang">⚔️ 素裳</option>
+                                <option value="xilian">🌸 浪漫少女</option>
+                                <option value="baie">☀️ 中二少年</option>
+                                <option value="pamu">🐰 温柔向导</option>
+                                <option value="luosigumu">⚙️ 绅士</option>
+                                <option value="heita">💎 天才</option>
+                                <option value="sushang">⚔️ 少女侠客</option>
                             </select>
                             <span id="detail-ai-toggle-icon">▸</span>
                         </div>

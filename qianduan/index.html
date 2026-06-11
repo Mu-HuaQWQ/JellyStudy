@@ -338,6 +338,49 @@
     </section>
 
     <!-- =============================================
+         Question Bank Page (题库)
+         ============================================= -->
+    <section id="questionbank-page" class="page">
+        <div class="qb-container">
+            <div class="qb-topbar">
+                <button class="btn-back" onclick="goBackFromQuestionBank()">&larr; 返回知识点</button>
+                <div class="qb-topbar-info">
+                    <h2 id="qbKpTitle">知识点题库</h2>
+                    <span class="qb-count" id="qbCount">0 道题目</span>
+                </div>
+                <div class="qb-topbar-actions">
+                    <input type="number" id="qbGenCount" value="5" min="1" max="20" class="qb-gen-input" title="生成数量">
+                    <button class="btn-primary" onclick="generateQuestions()" id="qbGenBtn">🤖 AI 生成</button>
+                    <button class="btn-secondary" onclick="showAddQuestionForm()">+ 手动添加</button>
+                </div>
+            </div>
+
+            <!-- Tab 切换 -->
+            <div class="qb-tabs">
+                <button class="qb-tab active" data-qbmode="browse" onclick="switchQBMode('browse')">📋 浏览模式</button>
+                <button class="qb-tab" data-qbmode="challenge" onclick="switchQBMode('challenge')">⚡ 闯关模式</button>
+            </div>
+
+            <!-- 浏览模式 -->
+            <div class="qb-mode" id="qbBrowseMode">
+                <div id="qbQuestionList" class="qb-question-list"></div>
+            </div>
+
+            <!-- 闯关模式 -->
+            <div class="qb-mode" id="qbChallengeMode" style="display:none;">
+                <div class="qb-challenge-progress" id="qbChallengeProgress"></div>
+                <div class="qb-challenge-card" id="qbChallengeCard">
+                    <p class="qb-challenge-placeholder">点击"开始闯关"随机抽取题目</p>
+                </div>
+                <div class="qb-challenge-actions" id="qbChallengeActions">
+                    <button class="btn-primary" onclick="startChallenge()" id="qbStartBtn">开始闯关</button>
+                </div>
+                <div class="qb-challenge-result" id="qbChallengeResult" style="display:none;"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =============================================
          AI Q&A Page
          ============================================= -->
     <section id="ai-page" class="page">
@@ -354,13 +397,13 @@
                 <div class="ai-topbar-right">
                     <label class="ai-persona-label" for="aiPersonaSelect">🎭 人设：</label>
                     <select id="aiPersonaSelect" class="ai-persona-select" onchange="onPersonaChange()">
-                        <option value="default">📚 默认老师 — 耐心专业</option>
-                        <option value="xilian">🌸 昔涟 — 浪漫俏皮的粉发少女</option>
-                        <option value="baie">☀️ 白厄 — 背负使命的烈阳少年</option>
-                        <option value="pamu">🐰 帕姆 — 傲娇可爱的列车长</option>
-                        <option value="luosigumu">⚙️ 螺丝咕姆 — 优雅理性的机械绅士</option>
-                        <option value="heita">💎 黑塔 — 毒舌高效的天才科学家</option>
-                        <option value="sushang">⚔️ 李素裳 — 热心豪爽的云骑新人</option>
+                        <option value="default">📚 耐心专业的老师</option>
+                        <option value="xilian">🌸 浪漫俏皮的粉发少女</option>
+                        <option value="baie">☀️ 阳光开朗的中二少年</option>
+                        <option value="pamu">🐰 傲娇温柔的可靠向导</option>
+                        <option value="luosigumu">⚙️ 优雅理性的机械绅士</option>
+                        <option value="heita">💎 毒舌高效的天才</option>
+                        <option value="sushang">⚔️ 热情迷糊的少女侠客</option>
                     </select>
                 </div>
             </div>
@@ -578,7 +621,7 @@
     </div>
 </div>
 
-<script src="js/app.js?v=13"></script>
+<script src="js/app.js?v=15"></script>
 <script src="js/skin.js"></script>
 </body>
 </html>
