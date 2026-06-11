@@ -136,9 +136,12 @@ public class CreditServiceImpl implements CreditService {
                     .userId(userId).itemId(item.getId())
                     .itemName(item.getName()).itemType(item.getType())
                     .rarity(item.getRarity()).equipped(false)
+                    .quantity(1)
                     .obtainTime(LocalDateTime.now()).build();
-                decorationRepository.save(deco);
+            } else {
+                deco.setQuantity((deco.getQuantity() == null ? 1 : deco.getQuantity()) + 1);
             }
+            decorationRepository.save(deco);
         } else {
             // 获得碎片
             UserFragment frag = fragmentRepository.findByUserIdAndItemId(userId, item.getId()).orElse(null);
@@ -203,15 +206,17 @@ public class CreditServiceImpl implements CreditService {
             fragmentRepository.save(frag);
         }
 
-        // 添加装饰
+        // 添加装饰（已有则数量+1）
         UserDecoration deco = decorationRepository.findByUserIdAndItemId(userId, itemId).orElse(null);
         if (deco == null) {
             deco = UserDecoration.builder()
                 .userId(userId).itemId(itemId).itemName(item.getName())
                 .itemType(item.getType()).rarity(item.getRarity())
-                .equipped(false).obtainTime(LocalDateTime.now()).build();
-            decorationRepository.save(deco);
+                .equipped(false).quantity(1).obtainTime(LocalDateTime.now()).build();
+        } else {
+            deco.setQuantity((deco.getQuantity() == null ? 1 : deco.getQuantity()) + 1);
         }
+        decorationRepository.save(deco);
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("success", true);
@@ -266,6 +271,7 @@ public class CreditServiceImpl implements CreditService {
             m.put("itemType", d.getItemType());
             m.put("rarity", d.getRarity());
             m.put("equipped", d.isEquipped());
+            m.put("quantity", d.getQuantity() == null ? 1 : d.getQuantity());
             return m;
         }).collect(Collectors.toList());
     }

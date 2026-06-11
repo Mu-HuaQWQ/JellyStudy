@@ -33,5 +33,8 @@ public class UserDecoration {
 
     private boolean equipped;      // 是否佩戴中，默认false
 
+    @Builder.Default
+    private Integer quantity = 1;  // 拥有数量（多次合成/抽取同一物品会叠加）
+
     private LocalDateTime obtainTime; // 获得时间
 }
