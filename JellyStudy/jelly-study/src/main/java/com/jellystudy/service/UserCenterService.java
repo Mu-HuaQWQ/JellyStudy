@@ -247,11 +247,18 @@ public class UserCenterService {
     public User setDisplayTitle(String userId, String code) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
-        List<String> owned = TitleCatalog.computeOwned(user);
-        if (!owned.contains(code)) {
+        // 合并内置 + 抽卡称号
+        List<String> builtinOwned = TitleCatalog.computeOwned(user);
+        List<UserDecoration> gachaTitles = decorationRepository.findByUserIdAndItemType(userId, "TITLE");
+
+        Set<String> allOwned = new HashSet<>(builtinOwned);
+        for (UserDecoration d : gachaTitles) {
+            allOwned.add(d.getItemName());
+        }
+        if (!allOwned.contains(code)) {
             throw new IllegalArgumentException("该称号尚未解锁");
         }
-        user.setOwnedTitles(owned);
+        user.setOwnedTitles(new ArrayList<>(allOwned));
         user.setDisplayTitle(code);
         User saved = userRepository.save(user);
         saved.setPassword(null);
