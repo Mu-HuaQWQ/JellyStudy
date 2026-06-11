@@ -1570,9 +1570,13 @@ function renderChallengeResult(results) {
 
     var resultDiv = document.getElementById('qbChallengeResult');
     resultDiv.style.display = 'block';
+    var creditsInfo = summary.creditsEarned > 0
+        ? '<p style="color:#d97706;font-weight:600;">💰 获得 +' + summary.creditsEarned + ' 信用点</p>'
+        : (summary.creditsEarned === 0 ? '<p style="color:#78716c;">今日题库信用点已达上限</p>' : '');
     var html = '<div class="qb-result-summary">' +
         '<h2>🎯 得分：' + summary.score + ' 分</h2>' +
         '<p>共 ' + summary.total + ' 题，答对 ' + summary.correct + ' 题</p>' +
+        creditsInfo +
         '</div>' +
         '<div class="qb-result-list">';
 
