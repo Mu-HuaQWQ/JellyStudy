@@ -38,6 +38,13 @@ function initApp() {
     updateUserDisplay().catch(() => {});
     loadHomeData();
     loadUsers();
+    heartbeatOnline();
+    // 每2分钟上报一次在线心跳
+    setInterval(heartbeatOnline, 2 * 60 * 1000);
+}
+
+function heartbeatOnline() {
+    fetchApi('/redis/users/' + currentUserId + '/online', 'POST').catch(() => {});
 }
 
 async function updateUserDisplay() {
