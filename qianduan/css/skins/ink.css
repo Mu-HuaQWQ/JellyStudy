@@ -3151,3 +3151,99 @@ body.cb-龙纹边框 .ai-chat-area { border: 3px solid #f59e0b !important; borde
 body.cb-神谕边框 .messages-container,
 body.cb-神谕边框 .ai-chat-area { border: 3px solid #8b5cf6 !important; border-radius: 12px !important; box-shadow: 0 0 20px rgba(139,92,246,0.4); }
 
+/* ===== 小摆件展示区 ===== */
+.decoration-shelf {
+    margin-top: 20px;
+    background: var(--paper-warm, #fefce8);
+    border: 2px dashed var(--border, #d6d3d1);
+    border-radius: var(--radius-lg, 10px);
+    padding: 16px;
+    text-align: center;
+}
+.decoration-shelf-header { margin-bottom: 12px; }
+.decoration-shelf-header h3 {
+    display: inline;
+    font-size: 1.05rem;
+    color: var(--ink, #1c1917);
+    margin: 0;
+}
+.decoration-shelf-hint {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted, #a8a29e);
+    margin-top: 4px;
+}
+.decoration-shelf-stage {
+    position: relative;
+    min-height: 200px;
+    background: linear-gradient(180deg, #f5f0e0 0%, #ede4d0 30%, #e8dcc4 60%, #e0d4b8 100%);
+    /* 木纹纹理 */
+    background-image:
+        repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(139,90,43,0.04) 40px, rgba(139,90,43,0.04) 42px),
+        repeating-linear-gradient(0deg, transparent, transparent 80px, rgba(139,90,43,0.03) 80px, rgba(139,90,43,0.03) 82px);
+    border-radius: 8px;
+    border: 3px solid #c4a97d;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.06);
+    overflow: hidden;
+    cursor: default;
+    user-select: none;
+}
+.decoration-shelf-empty {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    color: var(--text-muted, #a8a29e);
+    font-size: 0.9rem;
+    margin: 0;
+}
+/* 摆件个体 */
+.deco-item {
+    position: absolute;
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+    filter: drop-shadow(2px 3px 4px rgba(0,0,0,0.25));
+    transition: filter 0.2s;
+    z-index: 1;
+}
+.deco-item:hover { filter: drop-shadow(3px 4px 6px rgba(0,0,0,0.35)); z-index: 10; }
+.deco-item:active { cursor: grabbing; }
+.deco-item.dragging { z-index: 100; filter: drop-shadow(4px 6px 10px rgba(0,0,0,0.4)); transform: scale(1.15); }
+.deco-item-name {
+    position: absolute;
+    bottom: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.6rem;
+    white-space: nowrap;
+    color: var(--text-light, #78716c);
+    background: rgba(255,255,255,0.85);
+    padding: 1px 6px;
+    border-radius: 4px;
+    pointer-events: none;
+}
+/* 晃动动画 */
+@keyframes decoWobble1 {
+    0%,100% { transform: rotate(-1.5deg) translateY(0); }
+    50% { transform: rotate(1.5deg) translateY(-4px); }
+}
+@keyframes decoWobble2 {
+    0%,100% { transform: rotate(2deg) translateY(-1px); }
+    50% { transform: rotate(-1deg) translateY(-5px); }
+}
+@keyframes decoWobble3 {
+    0%,100% { transform: rotate(-0.8deg) translateY(-2px); }
+    33% { transform: rotate(1.2deg) translateY(2px); }
+    66% { transform: rotate(-1.5deg) translateY(-4px); }
+}
+.deco-item.wobble1 { animation: decoWobble1 3.5s ease-in-out infinite; }
+.deco-item.wobble2 { animation: decoWobble2 4.2s ease-in-out infinite; animation-delay: 0.6s; }
+.deco-item.wobble3 { animation: decoWobble3 3.8s ease-in-out infinite; animation-delay: 1.2s; }
+.deco-item.dragging { animation: none !important; }
+

@@ -2571,9 +2571,142 @@ async function loadProfile() {
         // 加载当前激活的 tab
         switchProfileTab(currentProfileTab);
         loadCreditInfo();
+        loadDecorationShelf();
     } catch (e) {
         alert('请求失败: ' + e.message);
     }
+}
+
+// ============ 小摆件展示区 ============
+
+var decoPositions = {};       // { itemId: {x: number, y: number} }
+var decoDragTarget = null;
+var decoDragStartX = 0, decoDragStartY = 0;
+var decoDragOrigLeft = 0, decoDragOrigTop = 0;
+
+async function loadDecorationShelf() {
+    var stage = document.getElementById('decorationShelfStage');
+    var empty = document.getElementById('decorationShelfEmpty');
+    if (!stage) return;
+
+    try {
+        var res = await fetchApi('/credits/decorations/' + currentUserId);
+        if (res.code !== 200 || !res.data) { showEmpty(); return; }
+        var decorations = res.data.filter(function(d) { return d.itemType === 'DECORATION'; });
+        if (decorations.length === 0) { showEmpty(); return; }
+
+        empty.style.display = 'none';
+        // 加载已保存的位置
+        var saved = localStorage.getItem('deco_pos_' + currentUserId);
+        if (saved) {
+            try { decoPositions = JSON.parse(saved); } catch(e) { decoPositions = {}; }
+        }
+
+        // 图标映射
+        var icons = {
+            '幸运草': '🍀', '水晶球': '🔮', '龙猫': '🐱',
+            '凤凰羽': '🪶', '时空沙漏': '⏳'
+        };
+        var wobbles = ['wobble1', 'wobble2', 'wobble3'];
+
+        // 清除旧摆件（保留空状态元素）
+        stage.querySelectorAll('.deco-item').forEach(function(el) { el.remove(); });
+
+        decorations.forEach(function(d, i) {
+            var el = document.createElement('div');
+            el.className = 'deco-item ' + wobbles[i % 3];
+            el.title = d.itemName;
+            el.dataset.itemId = d.itemId;
+            el.textContent = icons[d.itemName] || '🎁';
+
+            // 名称标签
+            var nameTag = document.createElement('span');
+            nameTag.className = 'deco-item-name';
+            nameTag.textContent = d.itemName;
+            el.appendChild(nameTag);
+
+            // 恢复位置或默认排列
+            var pos = decoPositions[d.itemId];
+            if (pos && pos.x !== undefined) {
+                el.style.left = pos.x + 'px';
+                el.style.top = pos.y + 'px';
+            } else {
+                el.style.left = (20 + i * 75) + 'px';
+                el.style.top = (40 + (i % 2) * 60) + 'px';
+            }
+
+            // 鼠标拖动
+            el.addEventListener('mousedown', decoDragStart);
+            // 触摸拖动
+            el.addEventListener('touchstart', decoDragStart, {passive: false});
+
+            stage.appendChild(el);
+        });
+    } catch(e) {
+        console.error('加载摆件失败:', e);
+        showEmpty();
+    }
+
+    function showEmpty() {
+        if (empty) empty.style.display = '';
+    }
+}
+
+function decoDragStart(e) {
+    e.preventDefault();
+    decoDragTarget = e.currentTarget;
+    decoDragTarget.classList.add('dragging');
+    decoDragTarget.style.zIndex = '100';
+
+    var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    var clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    decoDragStartX = clientX;
+    decoDragStartY = clientY;
+    decoDragOrigLeft = parseInt(decoDragTarget.style.left) || 0;
+    decoDragOrigTop = parseInt(decoDragTarget.style.top) || 0;
+
+    document.addEventListener('mousemove', decoDragMove);
+    document.addEventListener('mouseup', decoDragEnd);
+    document.addEventListener('touchmove', decoDragMove, {passive: false});
+    document.addEventListener('touchend', decoDragEnd);
+}
+
+function decoDragMove(e) {
+    if (!decoDragTarget) return;
+    e.preventDefault();
+    var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    var clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    var dx = clientX - decoDragStartX;
+    var dy = clientY - decoDragStartY;
+
+    var stage = document.getElementById('decorationShelfStage');
+    var maxX = (stage.clientWidth - 64);
+    var maxY = (stage.clientHeight - 64);
+    var newLeft = Math.max(0, Math.min(maxX, decoDragOrigLeft + dx));
+    var newTop = Math.max(0, Math.min(maxY, decoDragOrigTop + dy));
+
+    decoDragTarget.style.left = newLeft + 'px';
+    decoDragTarget.style.top = newTop + 'px';
+}
+
+function decoDragEnd(e) {
+    if (!decoDragTarget) return;
+    decoDragTarget.classList.remove('dragging');
+    decoDragTarget.style.zIndex = '1';
+
+    // 保存位置
+    var itemId = decoDragTarget.dataset.itemId;
+    decoPositions[itemId] = {
+        x: parseInt(decoDragTarget.style.left) || 0,
+        y: parseInt(decoDragTarget.style.top) || 0
+    };
+    localStorage.setItem('deco_pos_' + currentUserId, JSON.stringify(decoPositions));
+
+    decoDragTarget = null;
+    document.removeEventListener('mousemove', decoDragMove);
+    document.removeEventListener('mouseup', decoDragEnd);
+    document.removeEventListener('touchmove', decoDragMove);
+    document.removeEventListener('touchend', decoDragEnd);
 }
 
 function switchProfileTab(tab) {
