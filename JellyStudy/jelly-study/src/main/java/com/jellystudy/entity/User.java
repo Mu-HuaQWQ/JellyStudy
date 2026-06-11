@@ -45,6 +45,12 @@ public class User {
     // 粉丝数（冗余存储）
     private Integer followerCount;
 
+    private Integer creditPoints;   // 信用点余额，默认0
+
+    private Integer totalSpent;     // 累计消耗信用点，默认0
+
+    private Integer level;          // 用户等级 0-6，默认0
+
     // 已解锁的称号 code
     private List<String> ownedTitles;
 
