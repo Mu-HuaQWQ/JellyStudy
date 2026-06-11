@@ -5,10 +5,12 @@ import com.jellystudy.entity.Favorite;
 import com.jellystudy.entity.Follow;
 import com.jellystudy.entity.Question;
 import com.jellystudy.entity.User;
+import com.jellystudy.entity.UserDecoration;
 import com.jellystudy.repository.BrowseHistoryRepository;
 import com.jellystudy.repository.FavoriteRepository;
 import com.jellystudy.repository.FollowRepository;
 import com.jellystudy.repository.QuestionRepository;
+import com.jellystudy.repository.UserDecorationRepository;
 import com.jellystudy.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,9 +18,11 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * 用户中心服务：关注、收藏、最近浏览、称号。
@@ -43,6 +47,9 @@ public class UserCenterService {
 
     @Autowired
     private QuestionRepository questionRepository;
+
+    @Autowired
+    private UserDecorationRepository decorationRepository;
 
     // ============ 关注 ============
 
@@ -186,31 +193,52 @@ public class UserCenterService {
     // ============ 称号 ============
 
     /**
-     * 返回全部称号定义（含是否解锁、是否佩戴），并把最新解锁结果同步到 user.ownedTitles。
+     * 返回全部称号定义（内置 + 抽卡获得），含是否解锁、是否佩戴。
      */
     public List<Map<String, Object>> getTitles(String userId) {
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
             return new ArrayList<>();
         }
-        List<String> owned = TitleCatalog.computeOwned(user);
+        List<String> builtinOwned = TitleCatalog.computeOwned(user);
+        List<UserDecoration> gachaTitles = decorationRepository.findByUserIdAndItemType(userId, "TITLE");
+
+        // 合并所有已拥有的称号 code
+        Set<String> allOwned = new HashSet<>(builtinOwned);
+        for (UserDecoration d : gachaTitles) {
+            allOwned.add(d.getItemName()); // gacha 称号用名字做 code
+        }
 
         // 同步 ownedTitles
-        user.setOwnedTitles(owned);
-        if (user.getDisplayTitle() == null || !owned.contains(user.getDisplayTitle())) {
-            user.setDisplayTitle("newbie");
+        user.setOwnedTitles(new ArrayList<>(allOwned));
+        String wearing = user.getDisplayTitle();
+        if (wearing == null || !allOwned.contains(wearing)) {
+            wearing = "newbie";
+            user.setDisplayTitle(wearing);
         }
         userRepository.save(user);
 
-        String wearing = user.getDisplayTitle();
         List<Map<String, Object>> result = new ArrayList<>();
+        // 内置称号
         for (TitleCatalog.TitleDef def : TitleCatalog.TITLES) {
             Map<String, Object> m = new HashMap<>();
             m.put("code", def.code);
             m.put("name", def.name);
             m.put("requirement", def.requirement);
-            m.put("unlocked", owned.contains(def.code));
+            m.put("unlocked", builtinOwned.contains(def.code));
             m.put("wearing", def.code.equals(wearing));
+            m.put("source", "builtin");
+            result.add(m);
+        }
+        // 抽卡称号
+        for (UserDecoration d : gachaTitles) {
+            Map<String, Object> m = new HashMap<>();
+            m.put("code", d.getItemName());
+            m.put("name", d.getItemName());
+            m.put("requirement", "抽卡获得");
+            m.put("unlocked", true);
+            m.put("wearing", d.getItemName().equals(wearing));
+            m.put("source", "gacha");
             result.add(m);
         }
         return result;
@@ -235,15 +263,35 @@ public class UserCenterService {
     public Map<String, Object> getProfile(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
-        // 同步称号解锁状态
-        List<String> owned = TitleCatalog.computeOwned(user);
-        user.setOwnedTitles(owned);
-        if (user.getDisplayTitle() == null || !owned.contains(user.getDisplayTitle())) {
-            user.setDisplayTitle("newbie");
+        // 合并内置称号 + 抽卡称号
+        List<String> builtinOwned = TitleCatalog.computeOwned(user);
+        List<UserDecoration> gachaTitles = decorationRepository.findByUserIdAndItemType(userId, "TITLE");
+
+        Set<String> allOwned = new HashSet<>(builtinOwned);
+        for (UserDecoration d : gachaTitles) {
+            allOwned.add(d.getItemName());
+        }
+        user.setOwnedTitles(new ArrayList<>(allOwned));
+        String displayTitle = user.getDisplayTitle();
+        if (displayTitle == null || !allOwned.contains(displayTitle)) {
+            displayTitle = "newbie";
+            user.setDisplayTitle(displayTitle);
         }
         userRepository.save(user);
 
-        TitleCatalog.TitleDef wearing = TitleCatalog.findByCode(user.getDisplayTitle());
+        // 查找当前佩戴称号的名称（先查内置，再查抽卡）
+        final String currentTitle = displayTitle;
+        String displayTitleName = "";
+        TitleCatalog.TitleDef def = TitleCatalog.findByCode(currentTitle);
+        if (def != null) {
+            displayTitleName = def.name;
+        } else {
+            // 可能来自抽卡
+            Optional<UserDecoration> gachaTitle = decorationRepository
+                .findByUserIdAndItemType(userId, "TITLE").stream()
+                .filter(d -> d.getItemName().equals(currentTitle)).findFirst();
+            displayTitleName = gachaTitle.map(UserDecoration::getItemName).orElse(currentTitle);
+        }
 
         Map<String, Object> profile = new HashMap<>();
         profile.put("id", user.getId());
@@ -255,8 +303,8 @@ public class UserCenterService {
         profile.put("answerCount", user.getAnswerCount() == null ? 0 : user.getAnswerCount());
         profile.put("followingCount", user.getFollowingCount() == null ? 0 : user.getFollowingCount());
         profile.put("followerCount", user.getFollowerCount() == null ? 0 : user.getFollowerCount());
-        profile.put("displayTitle", user.getDisplayTitle());
-        profile.put("displayTitleName", wearing == null ? "" : wearing.name);
+        profile.put("displayTitle", displayTitle);
+        profile.put("displayTitleName", displayTitleName);
         return profile;
     }
 }
