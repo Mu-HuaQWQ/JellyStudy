@@ -3060,3 +3060,64 @@ body::before {
 
 .report-daterange { text-align: center; font-size: 0.82rem; color: var(--text-muted); }
 
+/* ══════════════════════════════════════════════════════════
+   Credit & Gacha System
+   ══════════════════════════════════════════════════════════ */
+
+.gacha-container { max-width: 800px; margin: 0 auto; }
+
+.gacha-header {
+    display: flex; align-items: center; justify-content: space-around; flex-wrap: wrap;
+    gap: 20px; padding: 20px; margin: 16px 0;
+    background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg);
+}
+.gacha-credit-display { text-align: center; }
+.gacha-credit-icon { font-size: 2rem; }
+.gacha-credit-value { display: block; font-size: 2rem; font-weight: 700; color: var(--amber); }
+.gacha-credit-label { font-size: 0.85rem; color: var(--text-light); }
+.gacha-level-display { text-align: center; flex: 1; min-width: 200px; }
+.gacha-level-display > span:first-child { font-size: 1.2rem; font-weight: 600; }
+.gacha-level-bar { height: 8px; background: var(--bg-hover); border-radius: 4px; margin: 8px 0; overflow: hidden; }
+.gacha-level-fill { height: 100%; background: linear-gradient(90deg, #f59e0b, #ef4444); border-radius: 4px; transition: width 0.5s; width: 0%; }
+
+.gacha-actions { display: flex; gap: 12px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
+.gacha-btn { padding: 14px 32px; font-size: 1.1rem; border-radius: 12px; }
+.gacha-btn-10 { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+
+.gacha-result { margin: 20px 0; padding: 16px; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px solid var(--border-light); }
+
+.gacha-levelup {
+    text-align: center; padding: 12px; background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border-radius: var(--radius); font-size: 1.1rem; font-weight: 600; margin-bottom: 12px;
+}
+
+.gacha-pull-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+.gacha-pull-card {
+    text-align: center; padding: 12px 8px; border: 2px solid #9ca3af; border-radius: 10px; background: var(--bg-card);
+}
+.gacha-pull-rarity { font-size: 0.75rem; font-weight: 600; margin-bottom: 4px; }
+.gacha-pull-name { font-size: 0.9rem; font-weight: 600; margin-bottom: 2px; }
+.gacha-pull-type { font-size: 0.7rem; color: var(--text-muted); }
+.gacha-pull-full { font-size: 0.85rem; color: #ef4444; font-weight: 700; margin-top: 4px; }
+.gacha-pull-frag { font-size: 0.82rem; color: var(--amber); margin-top: 4px; }
+.gacha-pull-synth { font-size: 0.75rem; color: #10b981; margin-top: 2px; }
+
+.gacha-tabs { display: flex; gap: 8px; margin: 20px 0 12px; }
+.gacha-tab {
+    padding: 8px 20px; border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--bg); cursor: pointer; font-family: inherit; font-size: 0.9rem;
+}
+.gacha-tab.active { background: var(--amber); color: #fff; border-color: var(--amber); }
+
+.frag-card, .deco-card {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 12px 16px; background: var(--bg-card); border: 1px solid var(--border-light);
+    border-radius: var(--radius); margin-bottom: 8px;
+}
+.frag-info strong { display: block; }
+.frag-type, .deco-type { font-size: 0.78rem; color: var(--text-muted); }
+.frag-count { font-weight: 700; font-size: 1rem; color: var(--amber); white-space: nowrap; }
+.deco-equipped { border-color: var(--amber); background: #fefce8; }
+
+.profile-credit-actions { margin-top: 16px; text-align: center; }
+

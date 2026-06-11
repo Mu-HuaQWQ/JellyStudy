@@ -2067,3 +2067,15 @@ body::before {
 .report-card-value { color: var(--text); }
 .report-subtab { background: var(--surface); border-color: var(--border); color: var(--text); }
 
+/* ══════════════════════════════════════════════════════════
+   Credit & Gacha System (Dark Mode)
+   ══════════════════════════════════════════════════════════ */
+
+.gacha-header { background: var(--surface); border-color: var(--border); }
+.gacha-result { background: var(--surface); border-color: var(--border); }
+.gacha-tab { background: var(--surface); border-color: var(--border); color: var(--text); }
+.frag-card, .deco-card { background: var(--surface); border-color: var(--border); }
+.gacha-pull-card { background: var(--surface); }
+.deco-equipped { background: #2d2615; }
+.gacha-levelup { background: #2d2615; color: var(--amber); }
+
