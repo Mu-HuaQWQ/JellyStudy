@@ -1,0 +1,90 @@
+<h2>个人中心页面布局</h2>
+<p class="subtitle">以下是根据 spec 设计的两种布局方案，HTML 骨架已采用方案 A。是否需要调整？</p>
+
+<div class="split">
+  <!-- Option A: Horizontal stats card -->
+  <div class="mockup">
+    <div class="mockup-header">方案 A — 横向卡片（当前）</div>
+    <div class="mockup-body">
+      <div style="background:#fffdf9;padding:24px;border-radius:12px;border:1px solid #e8e0d3;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:20px;">
+          <div style="width:80px;height:80px;border-radius:50%;background:#c87d3e;display:flex;align-items:center;justify-content:center;color:#fff;font-size:32px;position:relative;">
+            U
+            <div style="position:absolute;bottom:2px;right:2px;background:#5a8a5c;width:24px;height:24px;border-radius:50%;text-align:center;line-height:24px;font-size:12px;">📷</div>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+              <h3 style="margin:0;color:#2c2416;">用户昵称</h3>
+              <span style="background:#c9a44b;color:#fff;padding:2px 10px;border-radius:20px;font-size:12px;">新人</span>
+            </div>
+            <div style="display:flex;gap:24px;color:#6b6356;font-size:14px;">
+              <div><strong style="color:#1e3b5c;">128</strong> 贡献点</div>
+              <div><strong style="color:#1e3b5c;">12</strong> 关注</div>
+              <div><strong style="color:#1e3b5c;">5</strong> 粉丝</div>
+              <div><strong style="color:#1e3b5c;">8</strong> 提问</div>
+              <div><strong style="color:#1e3b5c;">23</strong> 回答</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:0;border-bottom:2px solid #e8e0d3;">
+        <div style="padding:10px 16px;border-bottom:2px solid #c87d3e;margin-bottom:-2px;color:#c87d3e;font-weight:600;">最近浏览</div>
+        <div style="padding:10px 16px;color:#6b6356;">我的收藏</div>
+        <div style="padding:10px 16px;color:#6b6356;">关注的人</div>
+        <div style="padding:10px 16px;color:#6b6356;">我的粉丝</div>
+        <div style="padding:10px 16px;color:#6b6356;">我的称号</div>
+      </div>
+      <div class="placeholder" style="margin-top:12px;">Tab 内容区 — 列表 / 卡片 / 称号网格</div>
+    </div>
+  </div>
+
+  <!-- Option B: Vertical sidebar layout -->
+  <div class="mockup">
+    <div class="mockup-header">方案 B — 左侧竖排信息</div>
+    <div class="mockup-body">
+      <div style="display:flex;gap:16px;">
+        <div style="width:160px;background:#fffdf9;padding:20px;border-radius:12px;border:1px solid #e8e0d3;text-align:center;">
+          <div style="width:64px;height:64px;border-radius:50%;background:#c87d3e;display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;margin:0 auto 10px;">
+            U
+          </div>
+          <h4 style="margin:0 0 4px;">用户昵称</h4>
+          <span style="background:#c9a44b;color:#fff;padding:1px 8px;border-radius:10px;font-size:11px;">新人</span>
+          <div style="margin-top:12px;text-align:left;font-size:12px;color:#6b6356;">
+            <div>📊 128 贡献点</div>
+            <div>👥 12 关注 · 5 粉丝</div>
+            <div>📝 8 提问 · 23 回答</div>
+          </div>
+        </div>
+        <div style="flex:1;">
+          <div style="display:flex;gap:0;border-bottom:2px solid #e8e0d3;margin-bottom:12px;">
+            <div style="padding:8px 12px;border-bottom:2px solid #c87d3e;margin-bottom:-2px;color:#c87d3e;font-weight:600;font-size:13px;">最近浏览</div>
+            <div style="padding:8px 12px;color:#6b6356;font-size:13px;">收藏</div>
+            <div style="padding:8px 12px;color:#6b6356;font-size:13px;">关注</div>
+            <div style="padding:8px 12px;color:#6b6356;font-size:13px;">称号</div>
+          </div>
+          <div class="placeholder">内容区</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>哪个布局更好？</h3>
+  <div class="options">
+    <div class="option" data-choice="a" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>横向卡片</h3>
+        <p>信息紧凑，一行展示所有统计数据，与现有页面风格一致，HTML 已按此方案搭建</p>
+      </div>
+    </div>
+    <div class="option" data-choice="b" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>左侧竖排</h3>
+        <p>头像和统计在左侧栏，内容区更宽敞，类似 GitHub 个人页风格</p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,96 @@
+<h2>称号展示方案</h2>
+<p class="subtitle">6 个称号，有的已解锁（可佩戴），有的未解锁（显示条件）。哪种展示方式更好？</p>
+
+<div class="split">
+  <!-- Option A: Grid of badges -->
+  <div class="mockup">
+    <div class="mockup-header">方案 A — 徽章网格</div>
+    <div class="mockup-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:16px;">
+        <div style="background:#e8f2e9;border:2px solid #5a8a5c;border-radius:12px;padding:16px;text-align:center;">
+          <div style="font-size:32px;margin-bottom:4px;">🌟</div>
+          <div style="font-weight:700;color:#1e3b5c;">新人</div>
+          <div style="font-size:11px;color:#5a8a5c;margin-top:4px;">✅ 佩戴中</div>
+        </div>
+        <div style="background:#fffdf9;border:2px solid #e8e0d3;border-radius:12px;padding:16px;text-align:center;">
+          <div style="font-size:32px;margin-bottom:4px;">❓</div>
+          <div style="font-weight:700;color:#1e3b5c;">提问新秀</div>
+          <div style="font-size:11px;color:#c87d3e;margin-top:4px;">🔒 提问数 ≥ 5</div>
+        </div>
+        <div style="background:#fffdf9;border:2px solid #e8e0d3;border-radius:12px;padding:16px;text-align:center;opacity:0.5;">
+          <div style="font-size:32px;margin-bottom:4px;">🔒</div>
+          <div style="font-weight:700;color:#1e3b5c;">提问达人</div>
+          <div style="font-size:11px;color:#6b6356;margin-top:4px;">提问数 ≥ 20</div>
+        </div>
+        <div style="background:#e8f2e9;border:2px solid #5a8a5c;border-radius:12px;padding:16px;text-align:center;">
+          <div style="font-size:32px;margin-bottom:4px;">⭐</div>
+          <div style="font-weight:700;color:#1e3b5c;">解答之星</div>
+          <div style="font-size:11px;color:#6b6356;margin-top:4px;">已解锁</div>
+        </div>
+        <div style="background:#fffdf9;border:2px solid #e8e0d3;border-radius:12px;padding:16px;text-align:center;opacity:0.5;">
+          <div style="font-size:32px;margin-bottom:4px;">🔒</div>
+          <div style="font-weight:700;color:#1e3b5c;">学者</div>
+          <div style="font-size:11px;color:#6b6356;margin-top:4px;">贡献点 ≥ 100</div>
+        </div>
+        <div style="background:#fffdf9;border:2px solid #e8e0d3;border-radius:12px;padding:16px;text-align:center;opacity:0.5;">
+          <div style="font-size:32px;margin-bottom:4px;">🔒</div>
+          <div style="font-weight:700;color:#1e3b5c;">大师</div>
+          <div style="font-size:11px;color:#6b6356;margin-top:4px;">贡献点 ≥ 500</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Option B: List style -->
+  <div class="mockup">
+    <div class="mockup-header">方案 B — 列表式</div>
+    <div class="mockup-body">
+      <div style="padding:16px;display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;align-items:center;gap:12px;background:#e8f2e9;border:1px solid #5a8a5c;border-radius:8px;padding:12px 16px;">
+          <span style="font-size:24px;">🌟</span>
+          <div style="flex:1;"><strong>新人</strong><br><span style="font-size:12px;color:#5a8a5c;">✅ 佩戴中 · 默认拥有</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;background:#fffdf9;border:1px solid #e8e0d3;border-radius:8px;padding:12px 16px;">
+          <span style="font-size:24px;">❓</span>
+          <div style="flex:1;"><strong>提问新秀</strong><br><span style="font-size:12px;color:#c87d3e;">🔒 提问数 ≥ 5（当前 3）</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;background:#fffdf9;border:1px solid #e8e0d3;border-radius:8px;padding:12px 16px;opacity:0.5;">
+          <span style="font-size:24px;">🔒</span>
+          <div style="flex:1;"><strong>提问达人</strong><br><span style="font-size:12px;color:#6b6356;">提问数 ≥ 20</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;background:#e8f2e9;border:1px solid #5a8a5c;border-radius:8px;padding:12px 16px;">
+          <span style="font-size:24px;">⭐</span>
+          <div style="flex:1;"><strong>解答之星</strong><br><span style="font-size:12px;color:#6b6356;">已解锁 · 回答数 ≥ 10</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;background:#fffdf9;border:1px solid #e8e0d3;border-radius:8px;padding:12px 16px;opacity:0.5;">
+          <span style="font-size:24px;">🔒</span>
+          <div style="flex:1;"><strong>学者</strong><br><span style="font-size:12px;color:#6b6356;">贡献点 ≥ 100</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;background:#fffdf9;border:1px solid #e8e0d3;border-radius:8px;padding:12px 16px;opacity:0.5;">
+          <span style="font-size:24px;">🔒</span>
+          <div style="flex:1;"><strong>大师</strong><br><span style="font-size:12px;color:#6b6356;">贡献点 ≥ 500</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>称号展示方式选哪个？</h3>
+  <div class="options">
+    <div class="option" data-choice="a" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>徽章网格</h3>
+        <p>3×2 卡片网格，图标+名称+状态，视觉冲击力强，游戏化成感</p>
+      </div>
+    </div>
+    <div class="option" data-choice="b" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>列表式</h3>
+        <p>纵向列表，信息空间更大，可显示进度详情（如当前值/目标值）</p>
+      </div>
+    </div>
+  </div>
+</div>

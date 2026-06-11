@@ -9,6 +9,31 @@ services:
     networks:
       - jelly-network
 
+  # RabbitMQ 消息队列
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: jelly-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    networks:
+      - jelly-network
+
+  # Nacos 注册中心/配置中心
+  nacos:
+    image: nacos/nacos-server:v2.2.3
+    container_name: jelly-nacos
+    environment:
+      - MODE=standalone
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+    networks:
+      - jelly-network
+
   # 主服务实例1
   jelly-study-instance1:
     build:
@@ -23,11 +48,11 @@ services:
       - SPRING_DATA_MONGODB_PORT=27017
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
-      - SPRING_RABBITMQ_HOST=host.docker.internal
+      - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
-      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER-ADDR=host.docker.internal:8848
-      - SPRING_CLOUD_NACOS_CONFIG_SERVER-ADDR=host.docker.internal:8848
-      - EVALUATION_SERVICE_URL=http://host.docker.internal:8089
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER-ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER-ADDR=nacos:8848
+      - EVALUATION_SERVICE_URL=http://jelly-study-evaluation:8087
       - APP_UPLOAD_DIR=/uploads
     volumes:
       - ./uploads:/uploads
@@ -52,11 +77,11 @@ services:
       - SPRING_DATA_MONGODB_PORT=27017
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
-      - SPRING_RABBITMQ_HOST=host.docker.internal
+      - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
-      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER-ADDR=host.docker.internal:8848
-      - SPRING_CLOUD_NACOS_CONFIG_SERVER-ADDR=host.docker.internal:8848
-      - EVALUATION_SERVICE_URL=http://host.docker.internal:8089
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER-ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER-ADDR=nacos:8848
+      - EVALUATION_SERVICE_URL=http://jelly-study-evaluation:8087
       - APP_UPLOAD_DIR=/uploads
     volumes:
       - ./uploads:/uploads
@@ -79,8 +104,8 @@ services:
     environment:
       - SPRING_DATA_MONGODB_HOST=host.docker.internal
       - SPRING_DATA_MONGODB_PORT=27017
-      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER-ADDR=host.docker.internal:8848
-      - SPRING_CLOUD_NACOS_CONFIG_SERVER-ADDR=host.docker.internal:8848
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER-ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER-ADDR=nacos:8848
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:

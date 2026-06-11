@@ -1,0 +1,132 @@
+<h2>AI 问答页面 — 角色扮演设计</h2>
+<p class="subtitle">角色选择器放在AI问答页面上端，两种入口的布局方案</p>
+
+<div class="section">
+  <h3>布局 A — 紧凑型（推荐）</h3>
+  <p style="color:var(--text-light);margin-bottom:1rem;">角色选择器与输入区融合，适合两种入口复用</p>
+
+  <div class="mockup">
+    <div class="mockup-header">独立 AI 问答页面</div>
+    <div class="mockup-body">
+      <!-- Page header -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+          <h3 style="margin:0;font-size:1.1rem;">🤖 AI 智能问答</h3>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:0.85rem;color:var(--text-light);white-space:nowrap;">🎭 AI人设：</span>
+            <select style="padding:6px 32px 6px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.9rem;cursor:pointer;">
+              <option>📚 默认老师 — 耐心专业</option>
+              <option>😤 暴躁老哥 — "这题我都讲八百遍了！"</option>
+              <option>🌸 夹子音妹妹 — "哥哥怎么连这个都不会呀~"</option>
+              <option>🍂 林黛玉 — "罢了罢了，终究是错怪了哥哥…"</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <!-- Chat area -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;min-height:280px;margin-bottom:12px;">
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;">
+            <span style="background:var(--primary);color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;flex-shrink:0;">我</span>
+            <div style="background:var(--bg-hover);padding:10px 14px;border-radius:12px;max-width:75%;">
+              <p style="margin:0;">什么是动态规划？</p>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;flex-direction:row-reverse;">
+            <span style="background:#f59e0b;color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;flex-shrink:0;">AI</span>
+            <div style="background:#fef3c7;padding:10px 14px;border-radius:12px;max-width:75%;border:1px solid #fcd34d;">
+              <p style="margin:0;font-size:0.9rem;">动态规划是一种将复杂问题分解为更简单的子问题来解决的算法思想。它的核心在于"记住"已经解决的子问题答案，避免重复计算...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Input area -->
+      <div style="display:flex;gap:8px;">
+        <input class="mock-input" placeholder="输入你的问题..." style="flex:1;">
+        <button class="mock-button" style="background:var(--primary);color:#fff;">发送</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>布局 B — 独立标题栏</h3>
+  <p style="color:var(--text-light);margin-bottom:1rem;">角色选择器放在独立横幅中，视觉更突出</p>
+
+  <div class="mockup">
+    <div class="mockup-header">角色横幅 + 聊天区</div>
+    <div class="mockup-body">
+      <!-- Persona banner -->
+      <div style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);border-radius:8px;padding:14px 18px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div style="color:#fff;">
+          <span style="font-size:1.1rem;">🎭 当前人设：</span>
+          <strong style="font-size:1.1rem;">📚 默认老师</strong>
+          <p style="margin:4px 0 0;font-size:0.8rem;opacity:0.85;">耐心专业地解答每一个问题</p>
+        </div>
+        <button style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3);padding:6px 16px;border-radius:6px;cursor:pointer;font-size:0.85rem;">切换人设 ▾</button>
+      </div>
+      <!-- Chat -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;min-height:200px;margin-bottom:12px;">
+        <div class="placeholder">聊天区域...</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <input class="mock-input" placeholder="输入你的问题..." style="flex:1;">
+        <button class="mock-button" style="background:var(--primary);color:#fff;">发送</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>问题详情页 — 内嵌 AI 问答区</h3>
+  <p style="color:var(--text-light);margin-bottom:1rem;">在问题详情页右下角或内容区下方新增可折叠的AI问答区块</p>
+
+  <div class="mockup">
+    <div class="mockup-header">问题详情页 — 含内嵌AI问答</div>
+    <div class="mockup-body">
+      <div class="placeholder" style="margin-bottom:8px;">问题标题、内容、回答列表...</div>
+      <div style="border:2px dashed #f59e0b;border-radius:8px;padding:14px;background:#fffbeb;">
+        <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:1.1rem;">🤖</span>
+            <strong>AI 快速问答</strong>
+            <span style="font-size:0.75rem;color:var(--text-light);background:var(--bg-hover);padding:2px 8px;border-radius:4px;">当前：默认老师</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <select style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:0.8rem;background:var(--bg);color:var(--text);">
+              <option>📚 老师</option>
+              <option>😤 暴躁</option>
+              <option>🌸 夹子</option>
+              <option>🍂 黛玉</option>
+            </select>
+            <span style="font-size:0.85rem;">展开 ▾</span>
+          </div>
+        </div>
+        <div style="background:var(--bg);border-radius:6px;padding:10px;min-height:80px;margin-bottom:8px;">
+          <p style="margin:0;font-size:0.85rem;color:var(--text-light);">AI 回答将在这里显示...</p>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <input placeholder="针对此题提问..." style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85rem;">
+          <button class="mock-button" style="font-size:0.85rem;">发送</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>紧凑型（布局A）</h3>
+      <p>选择器集成在页面顶栏，节省空间，适合两种入口复用。推荐。</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>独立横幅（布局B）</h3>
+      <p>角色横幅更醒目，视觉效果更强，但占用更多垂直空间。</p>
+    </div>
+  </div>
+</div>
