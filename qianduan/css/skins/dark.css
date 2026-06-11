@@ -2057,3 +2057,13 @@ body::before {
 .qb-result-correct { background: #064e3b; border-color: #059669; }
 .qb-result-wrong { background: #450a0a; border-color: #dc2626; }
 .qb-result-right { color: #6ee7b7; }
+
+/* ══════════════════════════════════════════════════════════
+   Learning Report (Dark Mode)
+   ══════════════════════════════════════════════════════════ */
+
+.report-encourage { background: #2d2615; color: var(--text); }
+.report-card { background: var(--surface); border-color: var(--border); }
+.report-card-value { color: var(--text); }
+.report-subtab { background: var(--surface); border-color: var(--border); color: var(--text); }
+

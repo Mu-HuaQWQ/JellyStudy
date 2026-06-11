@@ -3023,3 +3023,40 @@ body::before {
 .qb-result-your { font-size: 0.85rem; color: var(--text-light); }
 .qb-result-right { font-size: 0.85rem; color: #059669; font-weight: 500; }
 .qb-result-explain { font-size: 0.85rem; margin-top: 4px; color: var(--text-muted); }
+
+/* ══════════════════════════════════════════════════════════
+   Learning Report
+   ══════════════════════════════════════════════════════════ */
+
+.report-subtabs { display: flex; gap: 8px; margin-bottom: 20px; }
+.report-subtab {
+    padding: 6px 16px; border: 1px solid var(--border); border-radius: 20px;
+    background: var(--bg); color: var(--text); cursor: pointer; font-family: inherit; font-size: 0.88rem;
+}
+.report-subtab.active { background: var(--amber); color: #fff; border-color: var(--amber); }
+
+.report-encourage {
+    text-align: center; padding: 14px 20px; background: #fefce8;
+    border-radius: var(--radius-lg); margin-bottom: 16px;
+    font-size: 1.05rem; color: var(--ink); line-height: 1.6;
+}
+.report-encourage strong { color: var(--amber); }
+
+.report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.report-card {
+    text-align: center; padding: 18px 12px; border-radius: var(--radius-lg);
+    background: var(--bg-card); border: 1px solid var(--border-light);
+}
+.report-card-icon { font-size: 1.8rem; margin-bottom: 6px; }
+.report-card-value { font-size: 1.5rem; font-weight: 700; color: var(--ink); }
+.report-card-label { font-size: 0.82rem; color: var(--text-light); margin-top: 4px; }
+
+.report-blue .report-card-icon { color: #3b82f6; }
+.report-green .report-card-icon { color: #10b981; }
+.report-amber .report-card-icon { color: #d97706; }
+.report-purple .report-card-icon { color: #8b5cf6; }
+.report-teal .report-card-icon { color: #14b8a6; }
+.report-rose .report-card-icon { color: #f43f5e; }
+
+.report-daterange { text-align: center; font-size: 0.82rem; color: var(--text-muted); }
+
