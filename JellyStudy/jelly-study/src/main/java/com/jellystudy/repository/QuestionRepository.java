@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -45,4 +46,8 @@ public interface QuestionRepository extends MongoRepository<Question, String> {
 
     @Query("{ 'isDeleted': false, '_id': { $ne: ?0 } }")
     List<Question> findAllNotDeletedExcluding(String excludeId);
+
+    List<Question> findByAuthorIdAndCreateTimeAfter(String authorId, LocalDateTime after);
+
+    long countByAuthorIdAndCreateTimeAfter(String authorId, LocalDateTime after);
 }

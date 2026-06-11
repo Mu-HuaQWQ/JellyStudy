@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -34,4 +35,12 @@ public interface AnswerRepository extends MongoRepository<Answer, String> {
     
     @Query(value = "{ 'isDeleted': false, 'likeCount': { $gte: ?0 } }", sort = "{ 'likeCount': -1 }")
     List<Answer> findHotAnswers(Integer minLikes);
+
+    List<Answer> findByAuthorIdAndCreateTimeAfter(String authorId, LocalDateTime after);
+
+    @Query(value = "{ 'authorId': ?0, 'createTime': { $gte: ?1 } }", count = true)
+    long countByAuthorIdAndCreateTimeAfter(String authorId, LocalDateTime after);
+
+    @Query(value = "{ 'authorId': ?0, 'createTime': { $gte: ?1 } }", fields = "{ 'likedByUsers': 1 }")
+    List<Answer> findLikedByAuthorIdAndCreateTimeAfter(String authorId, LocalDateTime after);
 }
