@@ -4,30 +4,16 @@ server:
 spring:
   config:
     import: "optional:configserver:"
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
   data:
     mongodb:
       host: localhost
       port: 27017
       database: jellystudy_evaluation
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
-    virtual-host: /
-    publisher-confirm-type: correlated
-    publisher-returns: true
-    listener:
-      simple:
-        acknowledge-mode: manual
-        prefetch: 10
   application:
     name: jelly-study-evaluation
-  zipkin:
-    base-url: http://localhost:9411
-  sleuth:
-    sampler:
-      probability: 1.0
 
 ai:
   deepseek:

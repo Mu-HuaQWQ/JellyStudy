@@ -52,7 +52,7 @@ services:
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_CLOUD_NACOS_DISCOVERY_SERVER-ADDR=nacos:8848
       - SPRING_CLOUD_NACOS_CONFIG_SERVER-ADDR=nacos:8848
-      - EVALUATION_SERVICE_URL=http://jelly-study-evaluation:8087
+      - EVALUATION_SERVICE_URL=http://jelly-study-evaluation:8089
       - APP_UPLOAD_DIR=/uploads
     volumes:
       - ./uploads:/uploads
@@ -81,7 +81,7 @@ services:
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_CLOUD_NACOS_DISCOVERY_SERVER-ADDR=nacos:8848
       - SPRING_CLOUD_NACOS_CONFIG_SERVER-ADDR=nacos:8848
-      - EVALUATION_SERVICE_URL=http://jelly-study-evaluation:8087
+      - EVALUATION_SERVICE_URL=http://jelly-study-evaluation:8089
       - APP_UPLOAD_DIR=/uploads
     volumes:
       - ./uploads:/uploads
