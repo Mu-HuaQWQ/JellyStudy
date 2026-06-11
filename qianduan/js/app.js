@@ -8,6 +8,14 @@ let currentChatUserName = null;
 
 let currentPersona = localStorage.getItem('aiPersona') || 'default'; // AI 角色人设
 
+let qbCurrentKpId = null;
+let qbCurrentKpTitle = '';
+let qbCurrentKpContent = '';
+let qbCurrentMode = 'browse';
+let qbChallengeQuestions = [];
+let qbChallengeIndex = 0;
+let qbChallengeAnswers = [];
+
 let currentPage = 0;
 const pageSize = 10;
 
@@ -176,6 +184,8 @@ function showPage(pageName) {
             break;
         case 'profile':
             loadProfile();
+            break;
+        case 'questionbank':
             break;
     }
 }
@@ -1311,6 +1321,305 @@ function syncDetailPersona() {
     }
 }
 
+// ══════════════════════════════════════════════════════════
+// 题库系统
+// ══════════════════════════════════════════════════════════
+
+async function openQuestionBank(kpId, kpTitle, kpContent) {
+    qbCurrentKpId = kpId;
+    qbCurrentKpTitle = kpTitle;
+    qbCurrentKpContent = kpContent;
+    qbCurrentMode = 'browse';
+
+    document.getElementById('qbKpTitle').textContent = kpTitle + ' — 题库';
+    document.getElementById('qbCount').textContent = '加载中...';
+
+    // 加载题目数量
+    try {
+        const countRes = await fetchApi('/question-bank/knowledge-point/' + kpId + '/count');
+        if (countRes.code === 200) {
+            document.getElementById('qbCount').textContent = countRes.data + ' 道题目';
+        }
+    } catch (e) {}
+
+    switchQBMode('browse');
+    loadQbQuestions();
+    showPage('questionbank');
+}
+
+function goBackFromQuestionBank() {
+    showPage('knowledge');
+    loadKnowledgePoints();
+}
+
+function switchQBMode(mode) {
+    qbCurrentMode = mode;
+    document.querySelectorAll('.qb-tab').forEach(function(t) { t.classList.remove('active'); });
+    var modeBtn = document.querySelector('[data-qbmode="' + mode + '"]');
+    if (modeBtn) modeBtn.classList.add('active');
+
+    document.getElementById('qbBrowseMode').style.display = mode === 'browse' ? 'block' : 'none';
+    document.getElementById('qbChallengeMode').style.display = mode === 'challenge' ? 'block' : 'none';
+
+    if (mode === 'browse') {
+        loadQbQuestions();
+    }
+}
+
+async function loadQbQuestions() {
+    if (!qbCurrentKpId) return;
+    var container = document.getElementById('qbQuestionList');
+    container.innerHTML = '<p class="loading-text">加载中...</p>';
+
+    try {
+        var res = await fetchApi('/question-bank/knowledge-point/' + qbCurrentKpId);
+        if (res.code === 200 && res.data) {
+            renderQbQuestions(res.data);
+            document.getElementById('qbCount').textContent = res.data.length + ' 道题目';
+        } else {
+            container.innerHTML = '<p class="empty-state">暂无题目，点击"🤖 AI 生成"创建题目</p>';
+        }
+    } catch (e) {
+        container.innerHTML = '<p class="error-state">加载失败</p>';
+    }
+}
+
+function renderQbQuestions(questions) {
+    var container = document.getElementById('qbQuestionList');
+    container.innerHTML = questions.map(function(q, i) {
+        return '<div class="qb-card" id="qb-card-' + i + '">' +
+            '<div class="qb-card-header">' +
+                '<span class="qb-type-badge ' + (q.type === 'CHOICE' ? 'qb-choice' : 'qb-tf') + '">' + (q.type === 'CHOICE' ? '选择题' : '判断题') + '</span>' +
+                '<span class="qb-diff-badge">' + escapeHtml(q.difficulty || '中等') + '</span>' +
+                '<span class="qb-card-num">#' + (i + 1) + '</span>' +
+            '</div>' +
+            '<div class="qb-card-question">' + escapeHtml(q.question) + '</div>' +
+            '<div class="qb-card-options" id="qb-options-' + i + '">' +
+                (q.options || []).map(function(opt, oi) {
+                    return '<div class="qb-option" id="qb-opt-' + i + '-' + oi + '" onclick="selectQbOption(' + i + ', ' + oi + ', \'' + escapeHtml(q.correctAnswer || '').replace(/'/g, "\\'") + '\', \'' + escapeHtml((q.options || [])[oi] || '').replace(/'/g, "\\'") + '\')">' + escapeHtml(opt) + '</div>';
+                }).join('') +
+            '</div>' +
+            '<div class="qb-card-actions">' +
+                '<button class="btn-small btn-secondary" onclick="toggleQbAnswer(' + i + ')">查看答案</button>' +
+            '</div>' +
+            '<div class="qb-answer" id="qb-answer-' + i + '" style="display:none;">' +
+                '<div class="qb-answer-correct">✅ 正确答案：' + escapeHtml(q.correctAnswer || '') + '</div>' +
+                '<div class="qb-answer-explain">💡 解析：' + escapeHtml(q.explanation || '暂无解析') + '</div>' +
+            '</div>' +
+        '</div>';
+    }).join('');
+}
+
+function selectQbOption(cardIdx, optIdx, correctAnswer, optionText) {
+    var optionsDiv = document.getElementById('qb-options-' + cardIdx);
+    if (!optionsDiv) return;
+    var allOpts = optionsDiv.querySelectorAll('.qb-option');
+    allOpts.forEach(function(o) { o.classList.remove('qb-selected', 'qb-correct', 'qb-wrong'); });
+
+    var clicked = document.getElementById('qb-opt-' + cardIdx + '-' + optIdx);
+    if (!clicked) return;
+    clicked.classList.add('qb-selected');
+
+    if (optionText === correctAnswer) {
+        clicked.classList.add('qb-correct');
+    } else {
+        clicked.classList.add('qb-wrong');
+        allOpts.forEach(function(o) { if (o.textContent.trim() === correctAnswer) o.classList.add('qb-correct'); });
+    }
+}
+
+function toggleQbAnswer(idx) {
+    var el = document.getElementById('qb-answer-' + idx);
+    if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+// ═══════════════════════════════════════
+// AI 生成
+// ═══════════════════════════════════════
+
+async function generateQuestions() {
+    var count = parseInt(document.getElementById('qbGenCount').value) || 5;
+    var btn = document.getElementById('qbGenBtn');
+    btn.textContent = '⏳ 生成中...';
+    btn.disabled = true;
+
+    try {
+        var res = await fetchApi('/question-bank/generate', 'POST', {
+            knowledgePointId: qbCurrentKpId,
+            knowledgePointTitle: qbCurrentKpTitle,
+            knowledgePointContent: qbCurrentKpContent,
+            count: count
+        });
+        if (res.code === 200 && res.data && res.data.length > 0) {
+            alert('成功生成 ' + res.data.length + ' 道题目！');
+            loadQbQuestions();
+            var countRes = await fetchApi('/question-bank/knowledge-point/' + qbCurrentKpId + '/count');
+            if (countRes.code === 200) {
+                document.getElementById('qbCount').textContent = countRes.data + ' 道题目';
+            }
+        } else {
+            alert('生成失败：' + (res.message || '请重试'));
+        }
+    } catch (e) {
+        alert('请求失败：' + e.message);
+    }
+    btn.textContent = '🤖 AI 生成';
+    btn.disabled = false;
+}
+
+// ═══════════════════════════════════════
+// 闯关模式
+// ═══════════════════════════════════════
+
+async function startChallenge() {
+    var res = await fetchApi('/question-bank/knowledge-point/' + qbCurrentKpId);
+    if (res.code !== 200 || !res.data || res.data.length === 0) {
+        alert('题库为空，请先生成题目');
+        return;
+    }
+    var pool = res.data.slice();
+    shuffleArray(pool);
+    qbChallengeQuestions = pool.slice(0, Math.min(10, pool.length));
+    qbChallengeIndex = 0;
+    qbChallengeAnswers = [];
+
+    document.getElementById('qbStartBtn').style.display = 'none';
+    document.getElementById('qbChallengeResult').style.display = 'none';
+    renderChallengeQuestion();
+}
+
+function renderChallengeQuestion() {
+    var idx = qbChallengeIndex;
+    var total = qbChallengeQuestions.length;
+    var q = qbChallengeQuestions[idx];
+
+    document.getElementById('qbChallengeProgress').innerHTML = '第 <strong>' + (idx + 1) + '</strong> / ' + total + ' 题';
+
+    var card = document.getElementById('qbChallengeCard');
+    card.innerHTML = '<div class="qb-challenge-q-header">' +
+        '<span class="qb-type-badge ' + (q.type === 'CHOICE' ? 'qb-choice' : 'qb-tf') + '">' + (q.type === 'CHOICE' ? '选择题' : '判断题') + '</span>' +
+        '<span class="qb-diff-badge">' + escapeHtml(q.difficulty || '中等') + '</span>' +
+        '</div>' +
+        '<div class="qb-challenge-question">' + escapeHtml(q.question) + '</div>' +
+        '<div class="qb-challenge-options">' +
+            (q.options || []).map(function(opt, oi) {
+                return '<div class="qb-challenge-option" onclick="selectChallengeOption(' + oi + ', \'' + escapeHtml(opt).replace(/'/g, "\\'") + '\')">' + escapeHtml(opt) + '</div>';
+            }).join('') +
+        '</div>';
+
+    document.getElementById('qbChallengeActions').innerHTML =
+        '<button class="btn-primary" id="qbNextBtn" onclick="nextChallengeQuestion()" style="display:none;">' +
+            (idx + 1 < total ? '下一题 →' : '提交答案 ✓') +
+        '</button>';
+}
+
+function selectChallengeOption(optIdx, optText) {
+    var options = document.querySelectorAll('.qb-challenge-option');
+    options.forEach(function(o) { o.classList.remove('qb-challenge-selected'); });
+    options[optIdx].classList.add('qb-challenge-selected');
+    qbChallengeAnswers[qbChallengeIndex] = optText;
+    var btn = document.getElementById('qbNextBtn');
+    if (btn) btn.style.display = 'inline-block';
+}
+
+async function nextChallengeQuestion() {
+    qbChallengeIndex++;
+    if (qbChallengeIndex < qbChallengeQuestions.length) {
+        renderChallengeQuestion();
+    } else {
+        await submitChallenge();
+    }
+}
+
+async function submitChallenge() {
+    var submissions = qbChallengeQuestions.map(function(q, i) {
+        return { questionId: q.id, answer: qbChallengeAnswers[i] || '' };
+    });
+
+    try {
+        var res = await fetchApi('/question-bank/submit', 'POST', submissions);
+        if (res.code === 200 && res.data) {
+            renderChallengeResult(res.data);
+        } else {
+            alert('提交失败：' + res.message);
+        }
+    } catch (e) {
+        alert('提交失败：' + e.message);
+    }
+}
+
+function renderChallengeResult(results) {
+    var summary = results[0];
+    var details = results.slice(1);
+
+    var resultDiv = document.getElementById('qbChallengeResult');
+    resultDiv.style.display = 'block';
+    var html = '<div class="qb-result-summary">' +
+        '<h2>🎯 得分：' + summary.score + ' 分</h2>' +
+        '<p>共 ' + summary.total + ' 题，答对 ' + summary.correct + ' 题</p>' +
+        '</div>' +
+        '<div class="qb-result-list">';
+
+    for (var i = 0; i < qbChallengeQuestions.length; i++) {
+        var q = qbChallengeQuestions[i];
+        var d = details[i] || {};
+        var icon = d.correct ? '✅' : '❌';
+        html += '<div class="qb-result-item ' + (d.correct ? 'qb-result-correct' : 'qb-result-wrong') + '">' +
+            '<div class="qb-result-q">' + icon + ' ' + escapeHtml(q.question) + '</div>' +
+            '<div class="qb-result-your">你的答案：' + escapeHtml(qbChallengeAnswers[i] || '(未作答)') + '</div>' +
+            (!d.correct ? '<div class="qb-result-right">正确答案：' + escapeHtml(d.correctAnswer || '') + '</div>' : '') +
+            '<div class="qb-result-explain">💡 ' + escapeHtml(d.explanation || '') + '</div>' +
+        '</div>';
+    }
+    html += '</div><button class="btn-primary" onclick="startChallenge()" style="margin-top:1rem;">再来一组</button>';
+    resultDiv.innerHTML = html;
+
+    document.getElementById('qbChallengeCard').innerHTML = '';
+    document.getElementById('qbChallengeProgress').innerHTML = '';
+    document.getElementById('qbChallengeActions').innerHTML = '';
+}
+
+function shuffleArray(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+}
+
+function showAddQuestionForm() {
+    var type = prompt('题目类型？输入 1=选择题, 2=判断题', '1');
+    var question = prompt('题目内容：');
+    if (!question) return;
+    var options, correctAnswer;
+
+    if (type === '2') {
+        options = ['正确', '错误'];
+        correctAnswer = prompt('正确答案（正确/错误）：', '正确');
+    } else {
+        var opts = prompt('4个选项，用 | 分隔：', 'A. xxx | B. xxx | C. xxx | D. xxx');
+        if (!opts) return;
+        options = opts.split('|').map(function(s) { return s.trim(); });
+        correctAnswer = prompt('正确答案（复制选项文本）：', options[0]);
+    }
+
+    var difficulty = prompt('难度（简单/中等/困难）：', '中等');
+
+    fetchApi('/question-bank', 'POST', {
+        knowledgePointId: qbCurrentKpId,
+        knowledgePointTitle: qbCurrentKpTitle,
+        type: type === '2' ? 'TF' : 'CHOICE',
+        question: question,
+        options: options,
+        correctAnswer: correctAnswer,
+        explanation: '',
+        difficulty: difficulty,
+        authorId: currentUserId
+    }).then(function(r) {
+        if (r.code === 200) { alert('添加成功'); loadQbQuestions(); }
+        else alert('添加失败：' + r.message);
+    }).catch(function(e) { alert('请求失败：' + e.message); });
+}
+
 window.closeModal = closeModal;
 window.showUserModal = showUserModal;
 window.viewQuestionDetail = viewQuestionDetail;
@@ -1344,6 +1653,16 @@ window.sendAiQuestion = sendAiQuestion;
 window.toggleDetailAi = toggleDetailAi;
 window.sendDetailAiQuestion = sendDetailAiQuestion;
 window.syncDetailPersona = syncDetailPersona;
+window.openQuestionBank = openQuestionBank;
+window.goBackFromQuestionBank = goBackFromQuestionBank;
+window.switchQBMode = switchQBMode;
+window.generateQuestions = generateQuestions;
+window.startChallenge = startChallenge;
+window.selectChallengeOption = selectChallengeOption;
+window.nextChallengeQuestion = nextChallengeQuestion;
+window.toggleQbAnswer = toggleQbAnswer;
+window.selectQbOption = selectQbOption;
+window.showAddQuestionForm = showAddQuestionForm;
 
 // ==================== Redis 功能相关函数 ====================
 
