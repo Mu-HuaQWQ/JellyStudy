@@ -319,6 +319,22 @@ public class CreditServiceImpl implements CreditService {
         return Map.of("success", true, "equipped", equip);
     }
 
+    @Override
+    public Map<String, Object> getEquippedDecoration(String userId, String type) {
+        List<UserDecoration> equipped = decorationRepository.findByUserIdAndEquippedTrueAndItemType(userId, type);
+        if (equipped.isEmpty()) {
+            return Map.of("found", false);
+        }
+        UserDecoration d = equipped.get(0);
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("found", true);
+        result.put("itemId", d.getItemId());
+        result.put("itemName", d.getItemName());
+        result.put("itemType", d.getItemType());
+        result.put("rarity", d.getRarity());
+        return result;
+    }
+
     private int calcLevel(int totalSpent) {
         int level = 0;
         for (int i = 1; i < LEVEL_THRESHOLDS.length; i++) {

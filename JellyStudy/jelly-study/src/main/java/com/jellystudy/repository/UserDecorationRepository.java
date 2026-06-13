@@ -13,4 +13,5 @@ public interface UserDecorationRepository extends MongoRepository<UserDecoration
     Optional<UserDecoration> findByUserIdAndItemId(String userId, String itemId);
     List<UserDecoration> findByUserIdAndEquippedTrue(String userId);
     List<UserDecoration> findByUserIdAndItemType(String userId, String itemType);
+    List<UserDecoration> findByUserIdAndEquippedTrueAndItemType(String userId, String itemType);
 }

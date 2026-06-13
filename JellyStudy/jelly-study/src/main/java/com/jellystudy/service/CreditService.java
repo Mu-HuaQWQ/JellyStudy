@@ -25,4 +25,7 @@ public interface CreditService {
 
     /** 佩戴/卸下装饰 */
     Map<String, Object> toggleEquip(String userId, String decorationId, boolean equip);
+
+    /** 获取用户某类型已装备的装饰 */
+    Map<String, Object> getEquippedDecoration(String userId, String type);
 }

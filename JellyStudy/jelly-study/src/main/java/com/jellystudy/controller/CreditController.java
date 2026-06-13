@@ -67,4 +67,12 @@ public class CreditController {
         boolean equip = req.containsKey("equip") && (Boolean) req.get("equip");
         return ApiResponse.success(creditService.toggleEquip(userId, decorationId, equip));
     }
+
+    /** 获取用户某类型已装备的装饰（供消息气泡等场景用） */
+    @GetMapping("/equipped/{userId}")
+    public ApiResponse<Map<String, Object>> getEquippedByType(
+            @PathVariable String userId,
+            @RequestParam(defaultValue = "CHATBOX") String type) {
+        return ApiResponse.success(creditService.getEquippedDecoration(userId, type));
+    }
 }
