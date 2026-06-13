@@ -2233,31 +2233,31 @@ async function loadNotificationStats() {
 
 // ========== 私信系统相关函数 ==========
 
-// 加载联系人列表（最近消息的用户）
+// 加载联系人列表（使用专用联系人接口）
 async function loadContacts() {
     try {
         const container = document.getElementById('contactList');
         container.innerHTML = '<p class="loading-text">加载中...</p>';
-        
-        const res = await fetchApi(`/messages/user/${currentUserId}?page=0&size=50`);
-        
+
+        const res = await fetchApi('/messages/contacts/' + currentUserId);
+
         if (res.code === 200) {
             renderContactList(res.data);
         } else {
-            container.innerHTML = `<p class="error-state">加载失败</p>`;
+            container.innerHTML = '<p class="error-state">加载失败</p>';
         }
     } catch (error) {
         console.error('Failed to load contacts:', error);
-        document.getElementById('contactList').innerHTML = 
-            `<p class="error-state">加载失败: ${error.message}</p>`;
+        document.getElementById('contactList').innerHTML =
+            '<p class="error-state">加载失败: ' + error.message + '</p>';
     }
 }
 
 // 渲染联系人列表
-function renderContactList(messages) {
+function renderContactList(contacts) {
     const container = document.getElementById('contactList');
-    
-    if (!messages || messages.length === 0) {
+
+    if (!contacts || contacts.length === 0) {
         container.innerHTML = `
             <div class="empty-state" style="padding: 2rem;">
                 <h3>暂无私信</h3>
@@ -2266,51 +2266,26 @@ function renderContactList(messages) {
         `;
         return;
     }
-    
-    // 提取唯一联系人并按最后消息时间排序
-    const contactsMap = new Map();
-    messages.forEach(msg => {
-        const otherUserId = msg.senderId === currentUserId ? msg.receiverId : msg.senderId;
-        const otherUserName = msg.senderId === currentUserId ? msg.receiverName : msg.senderName;
-        
-        if (!contactsMap.has(otherUserId)) {
-            contactsMap.set(otherUserId, {
-                id: otherUserId,
-                name: otherUserName,
-                lastMessage: msg.content,
-                lastTime: msg.createTime,
-                unread: msg.status === 'UNREAD' && msg.receiverId === currentUserId ? 1 : 0
-            });
+
+    container.innerHTML = contacts.map(function(c) {
+        var name = c.displayName || c.userId || '?';
+        var avatarHtml;
+        if (c.avatar) {
+            avatarHtml = '<img src="' + IMAGE_BASE_URL + c.avatar + '" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.style.display=\'none\';this.parentElement.textContent=\'' + name[0] + '\';">';
         } else {
-            const contact = contactsMap.get(otherUserId);
-            if (new Date(msg.createTime) > new Date(contact.lastTime)) {
-                contact.lastMessage = msg.content;
-                contact.lastTime = msg.createTime;
-            }
-            if (msg.status === 'UNREAD' && msg.receiverId === currentUserId) {
-                contact.unread++;
-            }
+            avatarHtml = name[0];
         }
-    });
-    
-    // 转换为数组并排序
-    const contacts = Array.from(contactsMap.values())
-        .sort((a, b) => new Date(b.lastTime) - new Date(a.lastTime));
-    
-    container.innerHTML = contacts.map(c => `
-        <div class="contact-item ${currentChatUserId === c.id ? 'active' : ''}" 
-             onclick="openChat('${c.id}', '${escapeHtml(c.name)}')">
-            <div class="contact-avatar">${(c.name || '?')[0]}</div>
-            <div class="contact-info">
-                <div class="contact-name">
-                    ${escapeHtml(c.name)}
-                    ${c.unread > 0 ? `<span class="contact-unread-badge">${c.unread}</span>` : ''}
-                </div>
-                <div class="contact-last-message">${escapeHtml(c.lastMessage)}</div>
-                <div class="contact-time">${formatRelativeTime(c.lastTime)}</div>
-            </div>
-        </div>
-    `).join('');
+        return '<div class="contact-item ' + (currentChatUserId === c.userId ? 'active' : '') + '" onclick="openChat(\'' + c.userId + '\', \'' + escapeHtml(name) + '\')">' +
+            '<div class="contact-avatar">' + avatarHtml + '</div>' +
+            '<div class="contact-info">' +
+                '<div class="contact-name">' + escapeHtml(name) +
+                    (c.unread > 0 ? '<span class="contact-unread-badge">' + c.unread + '</span>' : '') +
+                '</div>' +
+                '<div class="contact-last-message">' + escapeHtml(c.lastMessage || '') + '</div>' +
+                '<div class="contact-time">' + formatRelativeTime(c.lastTime) + '</div>' +
+            '</div>' +
+        '</div>';
+    }).join('');
 }
 
 // 打开聊天窗口
@@ -2321,7 +2296,7 @@ async function openChat(userId, userName) {
     // 更新UI
     document.getElementById('chatEmptyState').style.display = 'none';
     document.getElementById('chatActive').style.display = 'flex';
-    document.getElementById('chatContactName').textContent = userName + ' (ID: ' + userId + ')';
+    document.getElementById('chatContactName').textContent = userName;
     
     // 高亮当前联系人
     document.querySelectorAll('.contact-item').forEach(item => {
