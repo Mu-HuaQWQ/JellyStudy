@@ -20,4 +20,6 @@ public interface MessageService {
     void markAllMessagesAsRead(String senderId, String receiverId);
 
     Map<String, Object> getMessageStats(String userId);
+
+    List<Map<String, Object>> getContacts(String userId);
 }

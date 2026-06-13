@@ -2,7 +2,9 @@ package com.jellystudy.service;
 
 import com.jellystudy.config.NacosConfig;
 import com.jellystudy.entity.Message;
+import com.jellystudy.entity.User;
 import com.jellystudy.repository.MessageRepository;
+import com.jellystudy.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -10,9 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class MessageServiceImpl implements MessageService {
@@ -27,6 +27,9 @@ public class MessageServiceImpl implements MessageService {
 
     @Autowired
     private NacosConfig nacosConfig;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Override
     public Message sendMessage(Message message) {
@@ -126,5 +129,59 @@ public class MessageServiceImpl implements MessageService {
         stats.put("unread", getUnreadCount(userId));
         stats.put("timestamp", System.currentTimeMillis());
         return stats;
+    }
+
+    @Override
+    public List<Map<String, Object>> getContacts(String userId) {
+        List<Message> all = messageRepository.findBySenderIdOrReceiverIdOrderByCreateTimeDesc(userId, userId);
+
+        // 用 LinkedHashMap 保持插入顺序
+        Map<String, Map<String, Object>> contactMap = new LinkedHashMap<>();
+
+        for (Message msg : all) {
+            String otherId = msg.getSenderId().equals(userId) ? msg.getReceiverId() : msg.getSenderId();
+            if (otherId == null || otherId.equals(userId)) continue;
+
+            Map<String, Object> c = contactMap.get(otherId);
+            if (c == null) {
+                // 解析用户信息
+                String displayName = otherId;
+                String avatar = null;
+                Optional<User> userOpt = userRepository.findById(otherId);
+                if (userOpt.isPresent()) {
+                    User u = userOpt.get();
+                    displayName = (u.getNickname() != null && !u.getNickname().isEmpty())
+                        ? u.getNickname() : (u.getUsername() != null ? u.getUsername() : otherId);
+                    avatar = u.getAvatar();
+                }
+
+                c = new LinkedHashMap<>();
+                c.put("userId", otherId);
+                c.put("displayName", displayName);
+                c.put("avatar", avatar);
+                c.put("lastMessage", msg.getContent());
+                c.put("lastTime", msg.getCreateTime().toString());
+                c.put("unread", 0);
+                contactMap.put(otherId, c);
+            }
+
+            // 更新最后消息
+            if (msg.getCreateTime() != null) {
+                Map<String, Object> existing = contactMap.get(otherId);
+                String existingTime = (String) existing.get("lastTime");
+                if (existingTime == null || msg.getCreateTime().toString().compareTo(existingTime) > 0) {
+                    existing.put("lastMessage", msg.getContent());
+                    existing.put("lastTime", msg.getCreateTime().toString());
+                }
+            }
+
+            // 未读计数
+            if (msg.getReceiverId().equals(userId) && msg.getStatus() == Message.MessageStatus.UNREAD) {
+                Map<String, Object> existing = contactMap.get(otherId);
+                existing.put("unread", ((Number) existing.get("unread")).intValue() + 1);
+            }
+        }
+
+        return new ArrayList<>(contactMap.values());
     }
 }

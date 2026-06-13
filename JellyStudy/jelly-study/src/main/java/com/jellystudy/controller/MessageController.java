@@ -67,4 +67,10 @@ public class MessageController {
     public ApiResponse<Map<String, Object>> getStats(@PathVariable String userId) {
         return ApiResponse.success(messageService.getMessageStats(userId));
     }
+
+    /** 获取联系人列表（含已解析的用户名和头像） */
+    @GetMapping("/contacts/{userId}")
+    public ApiResponse<List<Map<String, Object>>> getContacts(@PathVariable String userId) {
+        return ApiResponse.success(messageService.getContacts(userId));
+    }
 }
