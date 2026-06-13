@@ -2321,7 +2321,7 @@ async function openChat(userId, userName) {
     // 更新UI
     document.getElementById('chatEmptyState').style.display = 'none';
     document.getElementById('chatActive').style.display = 'flex';
-    document.getElementById('chatContactName').textContent = userName;
+    document.getElementById('chatContactName').textContent = userName + ' (ID: ' + userId + ')';
     
     // 高亮当前联系人
     document.querySelectorAll('.contact-item').forEach(item => {
@@ -2347,7 +2347,7 @@ async function loadMessages() {
         const res = await fetchApi(`/messages/conversation?user1Id=${currentUserId}&user2Id=${currentChatUserId}`);
         
         if (res.code === 200) {
-            renderMessages(res.data);
+            await renderMessages(res.data);
         } else {
             container.innerHTML = `<p class="error-state">加载失败</p>`;
         }
@@ -2359,9 +2359,48 @@ async function loadMessages() {
 }
 
 // 渲染消息列表
-function renderMessages(messages) {
-    const container = document.getElementById('messagesContainer');
-    
+var messageChatboxCache = {}; // { userId: cbClassName }
+var messageAvatarCache = {};  // { userId: avatarUrl or '' }
+
+async function ensureChatboxCache(userId) {
+    if (messageChatboxCache[userId] !== undefined) return;
+    try {
+        var res = await fetchApi('/credits/equipped/' + userId + '?type=CHATBOX');
+        if (res.code === 200 && res.data && res.data.found) {
+            messageChatboxCache[userId] = 'cb-' + res.data.itemName;
+        } else {
+            messageChatboxCache[userId] = '';
+        }
+    } catch(e) {
+        messageChatboxCache[userId] = '';
+    }
+}
+
+async function ensureAvatarCache(userId) {
+    if (messageAvatarCache[userId] !== undefined) return;
+    try {
+        var res = await fetchApi('/users/' + userId);
+        if (res.code === 200 && res.data && res.data.avatar) {
+            messageAvatarCache[userId] = IMAGE_BASE_URL + res.data.avatar;
+        } else {
+            messageAvatarCache[userId] = '';
+        }
+    } catch(e) {
+        messageAvatarCache[userId] = '';
+    }
+}
+
+function messageAvatarHtml(userId, senderName, isSelf) {
+    var url = messageAvatarCache[userId];
+    if (url) {
+        return '<img src="' + url + '" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.style.display=\'none\';this.parentElement.textContent=\'' + (isSelf ? '我' : (senderName || '?')[0]) + '\';">';
+    }
+    return isSelf ? '我' : (senderName || '?')[0];
+}
+
+async function renderMessages(messages) {
+    var container = document.getElementById('messagesContainer');
+
     if (!messages || messages.length === 0) {
         container.innerHTML = `
             <div class="empty-state" style="padding: 3rem;">
@@ -2371,18 +2410,26 @@ function renderMessages(messages) {
         `;
         return;
     }
-    
-    console.log('渲染消息 - 当前用户ID:', currentUserId, '聊天对象ID:', currentChatUserId);
-    
-    // API 返回最新在前，反转为最旧在前显示
-    const sorted = [...messages].reverse();
 
-    container.innerHTML = sorted.map(msg => {
-        const isSelf = msg.senderId === currentUserId;
+    // 预先加载双方的聊天框皮肤和头像
+    var userIds = new Set();
+    userIds.add(currentUserId);
+    if (currentChatUserId) userIds.add(currentChatUserId);
+    await Promise.all(Array.from(userIds).map(function(uid) {
+        return Promise.all([ensureChatboxCache(uid), ensureAvatarCache(uid)]);
+    }));
+
+    // API 返回最新在前，反转为最旧在前显示
+    var sorted = [...messages].reverse();
+
+    container.innerHTML = sorted.map(function(msg) {
+        var isSelf = msg.senderId === currentUserId;
+        var cbClass = messageChatboxCache[msg.senderId] || '';
+        var avatarContent = messageAvatarHtml(msg.senderId, msg.senderName, isSelf);
         return `
             <div class="message-item ${isSelf ? 'self' : 'other'}">
-                <div class="message-avatar">${isSelf ? '我' : (msg.senderName || '?')[0]}</div>
-                <div class="message-bubble">
+                <div class="message-avatar">${avatarContent}</div>
+                <div class="message-bubble ${cbClass}">
                     <div class="message-sender">${isSelf ? '我' : escapeHtml(msg.senderName)}</div>
                     <div class="message-text">${escapeHtml(msg.content)}</div>
                     <div class="message-time">${formatTime(msg.createTime)}</div>
@@ -2392,7 +2439,7 @@ function renderMessages(messages) {
     }).join('');
 
     // 滚动到底部
-    requestAnimationFrame(() => {
+    requestAnimationFrame(function() {
         container.scrollTop = container.scrollHeight;
     });
 }

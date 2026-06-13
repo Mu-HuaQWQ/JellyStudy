@@ -2033,12 +2033,14 @@ body::before {
 }
 
 .message-bubble {
+    position: relative;
     background: var(--surface);
     padding: 0.6rem 0.9rem;
     border-radius: 12px;
     border: 1px solid var(--border-light);
     box-shadow: var(--shadow-sm);
     border-bottom-left-radius: 4px;
+    overflow: visible;
 }
 
 .message-item.self .message-bubble {
@@ -3160,6 +3162,20 @@ body.cb-龙纹边框 .ai-chat-area { border: 3px solid #f59e0b !important; borde
 /* 神谕边框 */
 body.cb-神谕边框 .messages-container,
 body.cb-神谕边框 .ai-chat-area { border: 3px solid #8b5cf6 !important; border-radius: 12px !important; box-shadow: 0 0 20px rgba(139,92,246,0.4); }
+
+/* 单条消息气泡的聊天框皮肤 */
+.message-bubble.cb-简约边框 { border: 2px solid #d1d5db !important; border-radius: 4px !important; }
+.message-bubble.cb-花藤边框 { border: 3px solid #10b981 !important; border-radius: 14px !important; box-shadow: 0 0 10px rgba(16,185,129,0.18); }
+.message-bubble.cb-流光边框 { border: 2px solid transparent !important; border-radius: 10px !important; background-clip: padding-box; }
+.message-bubble.cb-流光边框::before {
+    content: ''; position: absolute; inset: -2px; border-radius: 10px; padding: 2px;
+    background: linear-gradient(135deg, #a78bfa, #60a5fa, #34d399, #fbbf24);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    pointer-events: none; z-index: -1;
+}
+.message-bubble.cb-龙纹边框 { border: 3px solid #f59e0b !important; border-radius: 6px !important; box-shadow: 0 0 12px rgba(245,158,11,0.25); }
+.message-bubble.cb-神谕边框 { border: 3px solid #8b5cf6 !important; border-radius: 10px !important; box-shadow: 0 0 16px rgba(139,92,246,0.35); }
 
 /* ===== 小摆件展示区（物理引擎 + 玻璃框） ===== */
 .decoration-shelf {
