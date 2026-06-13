@@ -37,6 +37,10 @@
             <span class="nav-icon nav-icon-ai"></span>
             <span>AI 问答</span>
         </a>
+        <a href="#" class="sidebar-link" data-page="gacha">
+            <span class="nav-icon nav-icon-gacha">🌠</span>
+            <span>跃迁</span>
+        </a>
         <a href="#" class="sidebar-link" data-page="redis">
             <span class="nav-icon nav-icon-redis"></span>
             <span>数据面板</span>
@@ -60,7 +64,10 @@
     <div class="sidebar-footer">
         <div class="sidebar-user" id="sidebarUser" onclick="showPage('profile')" title="进入个人中心" style="cursor:pointer;">
             <span class="sidebar-user-avatar" id="sidebarUserAvatar"></span>
-            <span class="sidebar-user-name" id="sidebarUserName">user001</span>
+            <div class="sidebar-user-info">
+                <span class="sidebar-user-name" id="sidebarUserName">user001</span>
+                <span class="sidebar-user-title" id="sidebarUserTitle"></span>
+            </div>
         </div>
         <button class="btn-small btn-secondary" onclick="showUserModal()">切换用户</button>
     </div>
@@ -345,14 +352,14 @@
         <div class="profile-tab-content" id="profileTabContent">
             <p class="loading-text">加载中...</p>
         </div>
-        <!-- 小摆件展示区 -->
+        <!-- 小摆件展示区（物理引擎） -->
         <div class="decoration-shelf" id="decorationShelf">
             <div class="decoration-shelf-header">
                 <h3>🎀 小摆件展示</h3>
-                <span class="decoration-shelf-hint">可拖动摆件 — 拖到喜欢的位置</span>
+                <button class="deco-shake-btn" id="decoShakeBtn" title="摇一摇">🫨 摇一摇</button>
             </div>
             <div class="decoration-shelf-stage" id="decorationShelfStage">
-                <p class="decoration-shelf-empty" id="decorationShelfEmpty">还没有合成摆件哦～去抽卡合成吧</p>
+                <p class="decoration-shelf-empty" id="decorationShelfEmpty">还没有合成摆件哦～去跃迁合成吧</p>
             </div>
         </div>
 
@@ -682,7 +689,7 @@
     </div>
 </div>
 
-<script src="js/app.js?v=23"></script>
+<script src="js/app.js?v=25"></script>
 <script src="js/skin.js"></script>
 </body>
 </html>

@@ -184,6 +184,8 @@ body::before {
     font-weight: 600;
     color: var(--text-primary);
 }
+.sidebar-user-info { display: flex; flex-direction: column; line-height: 1.2; }
+.sidebar-user-title { font-size: 0.62rem; color: #f59e0b; font-weight: 500; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .sidebar-badge {
     margin-left: auto;
@@ -2080,19 +2082,11 @@ body::before {
 .gacha-levelup { background: #2d2615; color: var(--amber); }
 
 /* ===== 小摆件展示区 (dark) ===== */
-.decoration-shelf { background: #2a2418; border-color: #524a38; }
-.decoration-shelf-header h3 { color: #e8dcc4; }
-.decoration-shelf-stage {
-    background: linear-gradient(180deg, #3a3222 0%, #332c1e 50%, #2d2618 100%);
-    background-image:
-        repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(180,140,80,0.06) 40px, rgba(180,140,80,0.06) 42px),
-        repeating-linear-gradient(0deg, transparent, transparent 80px, rgba(180,140,80,0.04) 80px, rgba(180,140,80,0.04) 82px);
-    border-color: #6b5d3e;
-    box-shadow: inset 0 2px 8px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2);
-}
-.decoration-shelf-empty { color: #8a8068; }
-.deco-item { filter: drop-shadow(2px 3px 4px rgba(0,0,0,0.5)); }
-.deco-item:hover { filter: drop-shadow(3px 4px 6px rgba(0,0,0,0.6)); }
-.deco-item.dragging { filter: drop-shadow(4px 6px 10px rgba(0,0,0,0.7)); }
-.deco-item-name { color: #b0a48c; background: rgba(30,30,20,0.85); }
+/* 小摆件展示区 dark */
+.decoration-shelf { background: #1e1a12; border-color: #454030; }
+.decoration-shelf-header h3 { color: #d5c8a8; }
+.deco-shake-btn { background: #2a2518; color: #c0b080; border-color: #524a30; }
+.deco-shake-btn:hover { background: #b8860b; color: #fff; }
+.decoration-shelf-stage { border-color: #5c4a2e; }
+.decoration-shelf-empty { color: #6b5d48; }
 

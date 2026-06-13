@@ -96,6 +96,18 @@ async function updateUserDisplay() {
     avatarEl.style.color = '#fff';
     avatarEl.style.fontWeight = '600';
     avatarEl.style.fontSize = '0.85rem';
+
+    // 侧边栏称号
+    try {
+        const profileRes = await fetchApi(`/users/${currentUserId}/profile`);
+        if (profileRes.code === 200 && profileRes.data && profileRes.data.displayTitleName) {
+            const sidebarTitle = document.getElementById('sidebarUserTitle');
+            if (sidebarTitle) {
+                sidebarTitle.textContent = profileRes.data.displayTitleName;
+                sidebarTitle.style.display = '';
+            }
+        }
+    } catch (e) {}
 }
 
 function setupNavigation() {
@@ -1047,6 +1059,9 @@ function switchUser() {
         const chatActive = document.getElementById('chatActive');
         if (chatEmptyState) chatEmptyState.style.display = 'flex';
         if (chatActive) chatActive.style.display = 'none';
+
+        // 重新应用装饰样式
+        loadEquippedStyles();
     }
 }
 
@@ -1836,8 +1851,8 @@ async function toggleEquip(decoId, equip) {
     try {
         var res = await fetchApi('/credits/equip', 'POST', { userId: currentUserId, decorationId: decoId, equip: equip });
         if (res.code === 200 && res.data && res.data.success) {
-            loadDecorations();
-            setTimeout(function() { location.reload(); }, 500);
+            loadDecorations();       // 刷新装饰列表
+            loadEquippedStyles();    // 重新应用样式（不再刷新页面）
         } else {
             alert('操作失败');
         }
@@ -1848,6 +1863,14 @@ async function toggleEquip(decoId, equip) {
 
 async function loadEquippedStyles() {
     try {
+        // 先清除所有已应用的背景/聊天框/称号样式
+        var cls = document.body.className.split(/\s+/);
+        for (var i = cls.length - 1; i >= 0; i--) {
+            if (cls[i].startsWith('bg-') || cls[i].startsWith('cb-') || cls[i].startsWith('title-')) {
+                document.body.classList.remove(cls[i]);
+            }
+        }
+
         var res = await fetchApi('/credits/decorations/' + currentUserId);
         if (res.code === 200 && res.data) {
             res.data.forEach(function(d) {
@@ -1856,6 +1879,13 @@ async function loadEquippedStyles() {
                         document.body.classList.add('bg-' + d.itemName);
                     } else if (d.itemType === 'CHATBOX') {
                         document.body.classList.add('cb-' + d.itemName);
+                    } else if (d.itemType === 'TITLE') {
+                        document.body.classList.add('title-' + d.itemName);
+                        // 更新各处称号显示
+                        var badge = document.getElementById('profileTitleBadge');
+                        if (badge) badge.textContent = d.itemName;
+                        var sidebarTitle = document.getElementById('sidebarUserTitle');
+                        if (sidebarTitle) sidebarTitle.textContent = d.itemName;
                     }
                 }
             });
@@ -2577,12 +2607,189 @@ async function loadProfile() {
     }
 }
 
-// ============ 小摆件展示区 ============
+// ============ 小摆件展示区（物理引擎） ============
 
-var decoPositions = {};       // { itemId: {x: number, y: number} }
-var decoDragTarget = null;
-var decoDragStartX = 0, decoDragStartY = 0;
-var decoDragOrigLeft = 0, decoDragOrigTop = 0;
+var decoBodies = [];         // 物理刚体数组
+var decoPhysAnimId = null;   // requestAnimationFrame id
+var decoDragBody = null;     // 当前拖拽的刚体
+var decoDragOX = 0, decoDragOY = 0; // 拖拽偏移
+
+const DECO_GRAVITY = 0.4;
+const DECO_DAMPING = 0.985;
+const DECO_BOUNCE = 0.45;
+const DECO_SIZE = 50;        // 玻璃框尺寸
+const DECO_RADIUS = 22;      // 碰撞半径
+
+var decoIcons = {
+    '幸运草': '🍀', '水晶球': '🔮', '龙猫': '🐱',
+    '凤凰羽': '🪶', '时空沙漏': '⏳'
+};
+
+function decoCreateBody(stage, itemName, itemId, rarity, x, y) {
+    var el = document.createElement('div');
+    el.className = 'deco-glass rarity-' + rarity;
+    el.dataset.itemId = itemId;
+    el.innerHTML = '<span class="deco-icon">' + (decoIcons[itemName] || '🎁') + '</span>';
+
+    // 随机初始速度
+    var body = {
+        el: el,
+        x: x, y: y,
+        vx: (Math.random() - 0.5) * 3,
+        vy: (Math.random() - 0.5) * 2,
+        w: DECO_SIZE, h: DECO_SIZE,
+        itemId: itemId,
+        rarity: rarity
+    };
+    decoBodies.push(body);
+    stage.appendChild(el);
+    return body;
+}
+
+function decoPhysicsTick() {
+    var stage = document.getElementById('decorationShelfStage');
+    if (!stage || decoBodies.length === 0) return;
+    var W = stage.clientWidth;
+    var H = stage.clientHeight;
+
+    for (var i = 0; i < decoBodies.length; i++) {
+        var b = decoBodies[i];
+        if (b === decoDragBody) continue; // 拖拽中不动
+
+        // 重力
+        b.vy += DECO_GRAVITY;
+        // 阻尼
+        b.vx *= DECO_DAMPING;
+        b.vy *= DECO_DAMPING;
+        // 位移
+        b.x += b.vx;
+        b.y += b.vy;
+
+        // 墙壁碰撞
+        if (b.x < 0) { b.x = 0; b.vx *= -DECO_BOUNCE; }
+        if (b.x + b.w > W) { b.x = W - b.w; b.vx *= -DECO_BOUNCE; }
+        if (b.y < 0) { b.y = 0; b.vy *= -DECO_BOUNCE; }
+        if (b.y + b.h > H) { b.y = H - b.h; b.vy *= -DECO_BOUNCE; }
+
+        // 静止阈值
+        if (Math.abs(b.vx) < 0.05) b.vx = 0;
+        if (Math.abs(b.vy) < 0.05) b.vy = 0;
+
+        // 与其他刚体碰撞
+        for (var j = i + 1; j < decoBodies.length; j++) {
+            var o = decoBodies[j];
+            if (o === decoDragBody) continue;
+            var cx1 = b.x + b.w/2, cy1 = b.y + b.h/2;
+            var cx2 = o.x + o.w/2, cy2 = o.y + o.h/2;
+            var dx = cx2 - cx1, dy = cy2 - cy1;
+            var dist = Math.sqrt(dx*dx + dy*dy);
+            var minDist = DECO_RADIUS * 2;
+            if (dist < minDist && dist > 0.01) {
+                // 分离重叠
+                var overlap = minDist - dist;
+                var nx = dx / dist, ny = dy / dist;
+                if (b !== decoDragBody) { b.x -= nx * overlap/2; b.y -= ny * overlap/2; }
+                if (o !== decoDragBody) { o.x += nx * overlap/2; o.y += ny * overlap/2; }
+                // 弹性碰撞
+                var relVelX = b.vx - o.vx;
+                var relVelY = b.vy - o.vy;
+                var velAlongNormal = relVelX * nx + relVelY * ny;
+                if (velAlongNormal > 0) {
+                    var impulse = velAlongNormal * 0.5;
+                    if (b !== decoDragBody) { b.vx -= impulse * nx; b.vy -= impulse * ny; }
+                    if (o !== decoDragBody) { o.vx += impulse * nx; o.vy += impulse * ny; }
+                }
+            }
+        }
+    }
+
+    // 同步 DOM
+    for (var k = 0; k < decoBodies.length; k++) {
+        var body = decoBodies[k];
+        body.el.style.transform = 'translate(' + Math.round(body.x) + 'px, ' + Math.round(body.y) + 'px)';
+    }
+
+    decoPhysAnimId = requestAnimationFrame(decoPhysicsTick);
+}
+
+function decoStartPhysics() {
+    if (decoPhysAnimId) cancelAnimationFrame(decoPhysAnimId);
+    decoPhysAnimId = requestAnimationFrame(decoPhysicsTick);
+}
+
+function decoStopPhysics() {
+    if (decoPhysAnimId) { cancelAnimationFrame(decoPhysAnimId); decoPhysAnimId = null; }
+}
+
+// ===== 拖拽 =====
+
+function decoBeginDrag(e) {
+    e.preventDefault();
+    var el = e.currentTarget;
+    // 找到对应刚体
+    for (var i = 0; i < decoBodies.length; i++) {
+        if (decoBodies[i].el === el) {
+            decoDragBody = decoBodies[i];
+            decoDragBody.vx = 0; decoDragBody.vy = 0; // 静止
+            break;
+        }
+    }
+    if (!decoDragBody) return;
+
+    var stageRect = document.getElementById('decorationShelfStage').getBoundingClientRect();
+    var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    var clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    decoDragOX = clientX - stageRect.left - decoDragBody.x;
+    decoDragOY = clientY - stageRect.top - decoDragBody.y;
+
+    decoDragBody.el.classList.add('dragging');
+
+    document.addEventListener('mousemove', decoDoDrag);
+    document.addEventListener('mouseup', decoEndDrag);
+    document.addEventListener('touchmove', decoDoDrag, {passive: false});
+    document.addEventListener('touchend', decoEndDrag);
+}
+
+function decoDoDrag(e) {
+    if (!decoDragBody) return;
+    e.preventDefault();
+    var stage = document.getElementById('decorationShelfStage');
+    var stageRect = stage.getBoundingClientRect();
+    var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    var clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    var newX = clientX - stageRect.left - decoDragOX;
+    var newY = clientY - stageRect.top - decoDragOY;
+    // 限制在边界内
+    newX = Math.max(0, Math.min(stage.clientWidth - DECO_SIZE, newX));
+    newY = Math.max(0, Math.min(stage.clientHeight - DECO_SIZE, newY));
+    decoDragBody.x = newX;
+    decoDragBody.y = newY;
+}
+
+function decoEndDrag(e) {
+    if (!decoDragBody) return;
+    decoDragBody.el.classList.remove('dragging');
+    decoDragBody = null;
+    document.removeEventListener('mousemove', decoDoDrag);
+    document.removeEventListener('mouseup', decoEndDrag);
+    document.removeEventListener('touchmove', decoDoDrag);
+    document.removeEventListener('touchend', decoEndDrag);
+}
+
+// ===== 摇一摇 =====
+
+function decoShakeAll() {
+    var btn = document.getElementById('decoShakeBtn');
+    if (btn) { btn.classList.add('shaking'); setTimeout(function(){ btn.classList.remove('shaking'); }, 600); }
+
+    for (var i = 0; i < decoBodies.length; i++) {
+        var b = decoBodies[i];
+        b.vx += (Math.random() - 0.5) * 18;
+        b.vy += (Math.random() * 10 - 14); // 向上飞起
+    }
+}
+
+// ===== 加载摆件 =====
 
 async function loadDecorationShelf() {
     var stage = document.getElementById('decorationShelfStage');
@@ -2596,52 +2803,34 @@ async function loadDecorationShelf() {
         if (decorations.length === 0) { showEmpty(); return; }
 
         empty.style.display = 'none';
-        // 加载已保存的位置
-        var saved = localStorage.getItem('deco_pos_' + currentUserId);
-        if (saved) {
-            try { decoPositions = JSON.parse(saved); } catch(e) { decoPositions = {}; }
-        }
 
-        // 图标映射
-        var icons = {
-            '幸运草': '🍀', '水晶球': '🔮', '龙猫': '🐱',
-            '凤凰羽': '🪶', '时空沙漏': '⏳'
-        };
-        var wobbles = ['wobble1', 'wobble2', 'wobble3'];
+        // 停止旧物理
+        decoStopPhysics();
+        // 清除旧元素和刚体
+        stage.querySelectorAll('.deco-glass').forEach(function(el) { el.remove(); });
+        decoBodies = [];
 
-        // 清除旧摆件（保留空状态元素）
-        stage.querySelectorAll('.deco-item').forEach(function(el) { el.remove(); });
-
-        decorations.forEach(function(d, i) {
-            var el = document.createElement('div');
-            el.className = 'deco-item ' + wobbles[i % 3];
-            el.title = d.itemName;
-            el.dataset.itemId = d.itemId;
-            el.textContent = icons[d.itemName] || '🎁';
-
-            // 名称标签
-            var nameTag = document.createElement('span');
-            nameTag.className = 'deco-item-name';
-            nameTag.textContent = d.itemName;
-            el.appendChild(nameTag);
-
-            // 恢复位置或默认排列
-            var pos = decoPositions[d.itemId];
-            if (pos && pos.x !== undefined) {
-                el.style.left = pos.x + 'px';
-                el.style.top = pos.y + 'px';
-            } else {
-                el.style.left = (20 + i * 75) + 'px';
-                el.style.top = (40 + (i % 2) * 60) + 'px';
+        // 按数量为每个装饰创建刚体（每个数量 = 一个物理实例）
+        decorations.forEach(function(d) {
+            var qty = d.quantity || 1;
+            for (var k = 0; k < qty; k++) {
+                var x = 15 + Math.random() * (stage.clientWidth - DECO_SIZE - 30);
+                var y = 10 + Math.random() * 60; // 从上方掉落
+                var body = decoCreateBody(stage, d.itemName, d.itemId, d.rarity, x, y);
+                // 鼠标拖拽
+                body.el.addEventListener('mousedown', decoBeginDrag);
+                body.el.addEventListener('touchstart', decoBeginDrag, {passive: false});
             }
-
-            // 鼠标拖动
-            el.addEventListener('mousedown', decoDragStart);
-            // 触摸拖动
-            el.addEventListener('touchstart', decoDragStart, {passive: false});
-
-            stage.appendChild(el);
         });
+
+        // 启动物理
+        decoStartPhysics();
+
+        // 摇一摇按钮
+        var shakeBtn = document.getElementById('decoShakeBtn');
+        if (shakeBtn) {
+            shakeBtn.onclick = decoShakeAll;
+        }
     } catch(e) {
         console.error('加载摆件失败:', e);
         showEmpty();
@@ -2650,63 +2839,6 @@ async function loadDecorationShelf() {
     function showEmpty() {
         if (empty) empty.style.display = '';
     }
-}
-
-function decoDragStart(e) {
-    e.preventDefault();
-    decoDragTarget = e.currentTarget;
-    decoDragTarget.classList.add('dragging');
-    decoDragTarget.style.zIndex = '100';
-
-    var clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    var clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    decoDragStartX = clientX;
-    decoDragStartY = clientY;
-    decoDragOrigLeft = parseInt(decoDragTarget.style.left) || 0;
-    decoDragOrigTop = parseInt(decoDragTarget.style.top) || 0;
-
-    document.addEventListener('mousemove', decoDragMove);
-    document.addEventListener('mouseup', decoDragEnd);
-    document.addEventListener('touchmove', decoDragMove, {passive: false});
-    document.addEventListener('touchend', decoDragEnd);
-}
-
-function decoDragMove(e) {
-    if (!decoDragTarget) return;
-    e.preventDefault();
-    var clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    var clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    var dx = clientX - decoDragStartX;
-    var dy = clientY - decoDragStartY;
-
-    var stage = document.getElementById('decorationShelfStage');
-    var maxX = (stage.clientWidth - 64);
-    var maxY = (stage.clientHeight - 64);
-    var newLeft = Math.max(0, Math.min(maxX, decoDragOrigLeft + dx));
-    var newTop = Math.max(0, Math.min(maxY, decoDragOrigTop + dy));
-
-    decoDragTarget.style.left = newLeft + 'px';
-    decoDragTarget.style.top = newTop + 'px';
-}
-
-function decoDragEnd(e) {
-    if (!decoDragTarget) return;
-    decoDragTarget.classList.remove('dragging');
-    decoDragTarget.style.zIndex = '1';
-
-    // 保存位置
-    var itemId = decoDragTarget.dataset.itemId;
-    decoPositions[itemId] = {
-        x: parseInt(decoDragTarget.style.left) || 0,
-        y: parseInt(decoDragTarget.style.top) || 0
-    };
-    localStorage.setItem('deco_pos_' + currentUserId, JSON.stringify(decoPositions));
-
-    decoDragTarget = null;
-    document.removeEventListener('mousemove', decoDragMove);
-    document.removeEventListener('mouseup', decoDragEnd);
-    document.removeEventListener('touchmove', decoDragMove);
-    document.removeEventListener('touchend', decoDragEnd);
 }
 
 function switchProfileTab(tab) {
