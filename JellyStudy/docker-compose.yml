@@ -22,36 +22,23 @@ services:
     networks:
       - jelly-network
 
-  # Nacos 注册中心/配置中心
-  nacos:
-    image: nacos/nacos-server:v2.2.3
-    container_name: jelly-nacos
-    environment:
-      - MODE=standalone
-    ports:
-      - "8848:8848"
-      - "9848:9848"
-    networks:
-      - jelly-network
-
   # 主服务实例1
   jelly-study-instance1:
     build:
       context: ./jelly-study
       dockerfile: Dockerfile
     container_name: jelly-study-1
+    mem_limit: 384m
     ports:
       - "8086:8086"
-      - "20880:20880"
     environment:
+      - JAVA_TOOL_OPTIONS=-Xmx256m -Xms128m
       - SPRING_DATA_MONGODB_HOST=host.docker.internal
       - SPRING_DATA_MONGODB_PORT=27017
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
-      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER-ADDR=nacos:8848
-      - SPRING_CLOUD_NACOS_CONFIG_SERVER-ADDR=nacos:8848
       - EVALUATION_SERVICE_URL=http://jelly-study-evaluation:8089
       - APP_UPLOAD_DIR=/uploads
     volumes:
@@ -69,18 +56,17 @@ services:
       context: ./jelly-study
       dockerfile: Dockerfile
     container_name: jelly-study-2
+    mem_limit: 384m
     ports:
       - "8087:8086"
-      - "20881:20880"
     environment:
+      - JAVA_TOOL_OPTIONS=-Xmx256m -Xms128m
       - SPRING_DATA_MONGODB_HOST=host.docker.internal
       - SPRING_DATA_MONGODB_PORT=27017
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
-      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER-ADDR=nacos:8848
-      - SPRING_CLOUD_NACOS_CONFIG_SERVER-ADDR=nacos:8848
       - EVALUATION_SERVICE_URL=http://jelly-study-evaluation:8089
       - APP_UPLOAD_DIR=/uploads
     volumes:
@@ -98,16 +84,15 @@ services:
       context: ./jelly-study-evaluation
       dockerfile: Dockerfile
     container_name: jelly-study-evaluation
+    mem_limit: 384m
     ports:
       - "8089:8089"
-      - "20882:20881"
     environment:
+      - JAVA_TOOL_OPTIONS=-Xmx256m -Xms128m
       - SPRING_DATA_MONGODB_HOST=host.docker.internal
       - SPRING_DATA_MONGODB_PORT=27017
-      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER-ADDR=nacos:8848
-      - SPRING_CLOUD_NACOS_CONFIG_SERVER-ADDR=nacos:8848
-      - DUBBO_REGISTRY_ADDRESS=nacos://nacos:8848
-      - NACOS_ADDR=nacos:8848
+      - SPRING_ZIPKIN_ENABLED=false
+      - SPRING_SLEUTH_ENABLED=false
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:

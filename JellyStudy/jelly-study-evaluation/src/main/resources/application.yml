@@ -21,18 +21,6 @@ ai:
     base-url: https://api.deepseek.com
     model: deepseek-chat
 
-dubbo:
-  application:
-    name: jelly-study-evaluation
-  registry:
-    address: nacos://${NACOS_ADDR:host.docker.internal:8848}
-  protocol:
-    name: dubbo
-    port: 20881
-  provider:
-    timeout: 30000
-
 logging:
   level:
     com.jellystudy: debug
-    org.apache.dubbo: info
