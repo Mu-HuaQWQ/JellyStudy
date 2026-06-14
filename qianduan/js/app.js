@@ -117,6 +117,7 @@ function setupNavigation() {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             const page = this.dataset.page;
+            if (page === 'profile') viewedUserId = null;
             showPage(page);
         });
     });
@@ -206,7 +207,6 @@ function showPage(pageName) {
             loadContacts();
             break;
         case 'profile':
-            viewedUserId = null;
             loadProfile();
             break;
         case 'gacha':
