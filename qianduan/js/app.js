@@ -2651,6 +2651,10 @@ async function loadProfile() {
             switchProfileTab(currentProfileTab);
             loadCreditInfo();
             loadDecorationShelf();
+        } else {
+            // 看别人时清掉"加载中"
+            var tabContent = document.getElementById('profileTabContent');
+            if (tabContent) tabContent.innerHTML = '';
         }
     } catch (e) {
         alert('请求失败: ' + e.message);
