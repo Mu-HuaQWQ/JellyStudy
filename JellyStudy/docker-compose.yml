@@ -32,7 +32,7 @@ services:
     ports:
       - "8086:8086"
     environment:
-      - JAVA_TOOL_OPTIONS=-Xmx256m -Xms128m
+      - JAVA_TOOL_OPTIONS=-Xmx256m -Xms128m -Dhttps.protocols=TLSv1.2,TLSv1.3 -Djdk.tls.client.protocols=TLSv1.2
       - SPRING_DATA_MONGODB_HOST=host.docker.internal
       - SPRING_DATA_MONGODB_PORT=27017
       - SPRING_REDIS_HOST=redis
@@ -60,7 +60,7 @@ services:
     ports:
       - "8087:8086"
     environment:
-      - JAVA_TOOL_OPTIONS=-Xmx256m -Xms128m
+      - JAVA_TOOL_OPTIONS=-Xmx256m -Xms128m -Dhttps.protocols=TLSv1.2,TLSv1.3 -Djdk.tls.client.protocols=TLSv1.2
       - SPRING_DATA_MONGODB_HOST=host.docker.internal
       - SPRING_DATA_MONGODB_PORT=27017
       - SPRING_REDIS_HOST=redis
@@ -88,7 +88,7 @@ services:
     ports:
       - "8089:8089"
     environment:
-      - JAVA_TOOL_OPTIONS=-Xmx256m -Xms128m
+      - JAVA_TOOL_OPTIONS=-Xmx256m -Xms128m -Dhttps.protocols=TLSv1.2,TLSv1.3 -Djdk.tls.client.protocols=TLSv1.2
       - SPRING_DATA_MONGODB_HOST=host.docker.internal
       - SPRING_DATA_MONGODB_PORT=27017
       - SPRING_ZIPKIN_ENABLED=false
