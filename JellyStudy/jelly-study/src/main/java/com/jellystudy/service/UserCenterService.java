@@ -268,8 +268,23 @@ public class UserCenterService {
     // ============ 个人资料汇总 ============
 
     public Map<String, Object> getProfile(String userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("用户不存在"));
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            // 用户不存在于数据库，返回最小化信息
+            Map<String, Object> profile = new HashMap<>();
+            profile.put("id", userId);
+            profile.put("username", userId);
+            profile.put("nickname", userId);
+            profile.put("avatar", null);
+            profile.put("reputation", 0);
+            profile.put("questionCount", 0);
+            profile.put("answerCount", 0);
+            profile.put("followingCount", 0);
+            profile.put("followerCount", 0);
+            profile.put("displayTitle", "newbie");
+            profile.put("displayTitleName", "新人");
+            return profile;
+        }
         // 合并内置称号 + 抽卡称号
         List<String> builtinOwned = TitleCatalog.computeOwned(user);
         List<UserDecoration> gachaTitles = decorationRepository.findByUserIdAndItemType(userId, "TITLE");
