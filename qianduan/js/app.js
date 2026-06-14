@@ -2609,10 +2609,8 @@ async function loadProfile() {
     // tabs 和操作区：看别人时隐藏
     var tabs = document.querySelector('.profile-tabs');
     if (tabs) tabs.style.display = isSelf ? '' : 'none';
-    var creditActions = document.querySelector('.profile-credit-actions');
-    if (creditActions) creditActions.style.display = isSelf ? '' : 'none';
     var shelf = document.getElementById('decorationShelf');
-    if (shelf) shelf.style.display = isSelf ? '' : 'none';
+    if (shelf) shelf.style.display = ''; // 展示台始终显示
 
     try {
         const res = await fetchApi(`/users/${targetUserId}/profile`);
@@ -2646,13 +2644,14 @@ async function loadProfile() {
         document.getElementById('profileQuestions').textContent = p.questionCount || 0;
         document.getElementById('profileAnswers').textContent = p.answerCount || 0;
 
-        // 看自己时才加载 tab
+        // 展示台始终加载
+        loadDecorationShelf(targetUserId);
+
+        // 看自己时才加载 tab 和信用
         if (isSelf) {
             switchProfileTab(currentProfileTab);
             loadCreditInfo();
-            loadDecorationShelf();
         } else {
-            // 看别人时清掉"加载中"
             var tabContent = document.getElementById('profileTabContent');
             if (tabContent) tabContent.innerHTML = '';
         }
@@ -2845,13 +2844,14 @@ function decoShakeAll() {
 
 // ===== 加载摆件 =====
 
-async function loadDecorationShelf() {
+async function loadDecorationShelf(forUserId) {
+    var targetUserId = forUserId || currentUserId;
     var stage = document.getElementById('decorationShelfStage');
     var empty = document.getElementById('decorationShelfEmpty');
     if (!stage) return;
 
     try {
-        var res = await fetchApi('/credits/decorations/' + currentUserId);
+        var res = await fetchApi('/credits/decorations/' + targetUserId);
         if (res.code !== 200 || !res.data) { showEmpty(); return; }
         var decorations = res.data.filter(function(d) { return d.itemType === 'DECORATION'; });
         if (decorations.length === 0) { showEmpty(); return; }
