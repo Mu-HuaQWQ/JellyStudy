@@ -1035,6 +1035,8 @@ body::before {
 }
 
 .answer-author { font-weight: 700; color: var(--ink); font-size: 0.92rem; }
+.clickable-author { cursor: pointer; color: var(--primary, #2563eb); }
+.clickable-author:hover { text-decoration: underline; }
 
 .accepted-badge {
     background: var(--sage);

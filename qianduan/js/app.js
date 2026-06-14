@@ -7,6 +7,7 @@ let currentChatUserId = null;
 let currentChatUserName = null;
 
 let currentPersona = localStorage.getItem('aiPersona') || 'default'; // AI 角色人设
+let viewedUserId = null; // 查看他人主页时的目标用户ID，null=看自己
 
 let qbCurrentKpId = null;
 let qbCurrentKpTitle = '';
@@ -205,6 +206,7 @@ function showPage(pageName) {
             loadContacts();
             break;
         case 'profile':
+            viewedUserId = null;
             loadProfile();
             break;
         case 'gacha':
@@ -325,7 +327,7 @@ function renderQuestions(questions, containerId) {
         <div class="question-card" onclick="viewQuestionDetail('${q.id}')">
             <h3>${escapeHtml(q.title)}</h3>
             <div class="question-meta">
-                <span>${q.authorName}</span>
+                <span class="clickable-author" onclick="event.stopPropagation();viewUserProfile('${q.authorId}')">${q.authorName}</span>
                 <span>${q.knowledgePointTitle || '待AI分析'}</span>
                 <span>${q.viewCount} 次浏览</span>
                 <span>${q.answerCount || 0} 个回答</span>
@@ -397,7 +399,7 @@ function renderQuestionDetail(data) {
                 <div class="detail-header">
                     <h1>${escapeHtml(q.title)}</h1>
                     <div class="detail-meta">
-                        <span>${q.authorName}</span>
+                        <span class="clickable-author" onclick="viewUserProfile('${q.authorId}')">${q.authorName}</span>
                         <span>${q.knowledgePointTitle || '待AI分析'}</span>
                         <span>${q.viewCount} 次浏览</span>
                         <span>${answers.length} 个回答</span>
@@ -591,7 +593,7 @@ function renderAnswerCard(answer, acceptedAnswer, answerCommentsMap, isAuthor, q
     return `
         <div class="answer-card ${isAccepted ? 'accepted' : ''}" id="answer-${answer.id}">
             <div class="answer-header">
-                <span class="answer-author">${answer.authorName}</span>
+                <span class="answer-author clickable-author" onclick="viewUserProfile('${answer.authorId}')">${answer.authorName}</span>
                 ${isAccepted ? '<span class="accepted-badge">已采纳</span>' : ''}
             </div>
             <div class="answer-content">${escapeHtml(answer.content)}</div>
@@ -2587,9 +2589,33 @@ function formatRelativeTime(dateString) {
 
 let currentProfileTab = 'history';
 
+function viewUserProfile(userId) {
+    viewedUserId = userId;
+    showPage('profile');
+}
+
 async function loadProfile() {
+    var targetUserId = viewedUserId || currentUserId;
+    var isSelf = !viewedUserId;
+
+    // 返回自己按钮
+    var backBtn = document.getElementById('profileBackBtn');
+    if (backBtn) backBtn.style.display = isSelf ? 'none' : '';
+
+    // 头像上传按钮
+    var uploadBtn = document.getElementById('profileAvatarUploadBtn');
+    if (uploadBtn) uploadBtn.style.display = isSelf ? '' : 'none';
+
+    // tabs 和操作区：看别人时隐藏
+    var tabs = document.querySelector('.profile-tabs');
+    if (tabs) tabs.style.display = isSelf ? '' : 'none';
+    var creditActions = document.querySelector('.profile-credit-actions');
+    if (creditActions) creditActions.style.display = isSelf ? '' : 'none';
+    var shelf = document.getElementById('decorationShelf');
+    if (shelf) shelf.style.display = isSelf ? '' : 'none';
+
     try {
-        const res = await fetchApi(`/users/${currentUserId}/profile`);
+        const res = await fetchApi(`/users/${targetUserId}/profile`);
         if (res.code !== 200) {
             alert('加载个人资料失败: ' + res.message);
             return;
@@ -2620,10 +2646,12 @@ async function loadProfile() {
         document.getElementById('profileQuestions').textContent = p.questionCount || 0;
         document.getElementById('profileAnswers').textContent = p.answerCount || 0;
 
-        // 加载当前激活的 tab
-        switchProfileTab(currentProfileTab);
-        loadCreditInfo();
-        loadDecorationShelf();
+        // 看自己时才加载 tab
+        if (isSelf) {
+            switchProfileTab(currentProfileTab);
+            loadCreditInfo();
+            loadDecorationShelf();
+        }
     } catch (e) {
         alert('请求失败: ' + e.message);
     }

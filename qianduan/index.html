@@ -293,12 +293,13 @@
          Profile / User Center Page
          ============================================= -->
     <section id="profile-page" class="page">
+        <button id="profileBackBtn" class="btn-back" style="display:none;margin-bottom:12px;" onclick="viewedUserId=null;loadProfile();">← 返回我的主页</button>
         <!-- 顶部资料卡片 -->
         <div class="profile-header">
             <div class="profile-avatar-wrap">
                 <img id="profileAvatarImg" class="profile-avatar-img" alt="头像" style="display:none;">
                 <div id="profileAvatarFallback" class="profile-avatar-fallback">U</div>
-                <button class="profile-avatar-upload" onclick="document.getElementById('avatarFileInput').click()" title="更换头像">📷</button>
+                <button class="profile-avatar-upload" id="profileAvatarUploadBtn" onclick="document.getElementById('avatarFileInput').click()" title="更换头像">📷</button>
                 <input type="file" id="avatarFileInput" accept="image/*" style="display:none;" onchange="uploadAvatar(event)">
             </div>
             <div class="profile-info">
@@ -689,7 +690,7 @@
     </div>
 </div>
 
-<script src="js/app.js?v=28"></script>
+<script src="js/app.js?v=29"></script>
 <script src="js/skin.js"></script>
 </body>
 </html>
