@@ -39,3 +39,158 @@ body {
 html { scroll-behavior: smooth; }
 a { color: inherit; text-decoration: none; }
 img { max-width: 100%; height: auto; }
+
+/* ══════════════════════════════════════════════════════════
+   Equippable Background Themes
+   Each bg-* class overrides CSS variables for a cohesive look
+   ══════════════════════════════════════════════════════════ */
+
+/* ── 纯白背景 (Plain White) ── */
+body.bg-纯白背景 {
+    background: #fafafa !important;
+    --bg: #fafafa;
+    --bg-card: #ffffff;
+    --bg-hover: #f5f5f4;
+    --surface: #ffffff;
+    --surface-alt: #fafaf7;
+    --paper: #faf8f4;
+    --paper-warm: #f7f3ea;
+    --text: #292524;
+    --text-muted: #78716c;
+    --text-light: #a8a29e;
+    --border: #e0dcd5;
+    --border-light: #ede9e2;
+    --ink: #1e3b5c;
+    --ink-light: #2d5a8a;
+    --ink-dark: #0f2135;
+    --amber: #c87d3e;
+    --amber-glow: #e09a5a;
+    --gold: #c9a44b;
+    --sage: #5a8a5c;
+    --sage-light: #e8f2e9;
+    --rust: #b8453f;
+    --rust-light: #fce8e6;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+    --shadow: 0 2px 12px rgba(0,0,0,0.07);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.10);
+}
+
+/* ── 星空背景 (Starry Night) ── */
+body.bg-星空背景 {
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e) !important;
+    --bg: #1a1535;
+    --bg-card: #221e45;
+    --bg-hover: #2a2550;
+    --surface: #221e45;
+    --surface-alt: #282350;
+    --paper: #221e45;
+    --paper-warm: #282350;
+    --text: #e4e0f8;
+    --text-muted: #a09cc5;
+    --text-light: #7874a0;
+    --border: #3d3870;
+    --border-light: #322e5a;
+    --ink: #b8b0f0;
+    --ink-light: #d0c8ff;
+    --ink-dark: #8a80d0;
+    --amber: #e8b860;
+    --amber-glow: #f0d080;
+    --gold: #e0c060;
+    --sage: #70b070;
+    --sage-light: #253520;
+    --rust: #e06050;
+    --rust-light: #352020;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+    --shadow: 0 2px 12px rgba(0,0,0,0.35);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.45);
+}
+
+/* ── 竹林背景 (Bamboo Forest) ── */
+body.bg-竹林背景 {
+    background: linear-gradient(180deg, #d4e9c3, #a8d5a2, #6b8f5e) !important;
+    --bg: #e8f4e0;
+    --bg-card: #f2faf0;
+    --bg-hover: #e0f0d8;
+    --surface: #f5faf2;
+    --surface-alt: #edf5e8;
+    --paper: #f0f6ea;
+    --paper-warm: #eaf2e2;
+    --text: #2c3a1f;
+    --text-muted: #5a6b4a;
+    --text-light: #7a8b6a;
+    --border: #c8d8b8;
+    --border-light: #d8e8c8;
+    --ink: #3a5a28;
+    --ink-light: #4a7a32;
+    --ink-dark: #2a4018;
+    --amber: #c88030;
+    --amber-glow: #d89840;
+    --gold: #b89830;
+    --sage: #508040;
+    --sage-light: #d0e8c0;
+    --rust: #c04030;
+    --rust-light: #fce0d8;
+    --shadow-sm: 0 1px 3px rgba(30,50,20,0.08);
+    --shadow: 0 2px 12px rgba(30,50,20,0.10);
+    --shadow-lg: 0 8px 32px rgba(30,50,20,0.15);
+}
+
+/* ── 银河背景 (Galaxy) ── */
+body.bg-银河背景 {
+    background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460) !important;
+    --bg: #161a30;
+    --bg-card: #1c2440;
+    --bg-hover: #222c50;
+    --surface: #1c2440;
+    --surface-alt: #222c50;
+    --paper: #1c2440;
+    --paper-warm: #222c50;
+    --text: #dde4f0;
+    --text-muted: #8a95b8;
+    --text-light: #6a7595;
+    --border: #2a3a60;
+    --border-light: #223050;
+    --ink: #80a0e0;
+    --ink-light: #a0c0ff;
+    --ink-dark: #5070c0;
+    --amber: #e0a050;
+    --amber-glow: #f0c070;
+    --gold: #d8b850;
+    --sage: #60a060;
+    --sage-light: #203020;
+    --rust: #d85040;
+    --rust-light: #302020;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow: 0 2px 12px rgba(0,0,0,0.4);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+/* ── 极光背景 (Aurora) ── */
+body.bg-极光背景 {
+    background: linear-gradient(135deg, #0d1b2a, #1b2838, #1a3a4a, #2d5a5a) !important;
+    --bg: #0f1e2e;
+    --bg-card: #152838;
+    --bg-hover: #1c3042;
+    --surface: #152838;
+    --surface-alt: #1c3042;
+    --paper: #152838;
+    --paper-warm: #1c3042;
+    --text: #d8e8f5;
+    --text-muted: #8098b8;
+    --text-light: #608098;
+    --border: #1e3a4e;
+    --border-light: #182e40;
+    --ink: #68b8d8;
+    --ink-light: #90d8f0;
+    --ink-dark: #4890b0;
+    --amber: #e0a848;
+    --amber-glow: #f0c868;
+    --gold: #d0c050;
+    --sage: #58a088;
+    --sage-light: #1a3028;
+    --rust: #d86050;
+    --rust-light: #302020;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow: 0 2px 12px rgba(0,0,0,0.4);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+}

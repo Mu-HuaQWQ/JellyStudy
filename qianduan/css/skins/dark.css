@@ -48,6 +48,37 @@
     --radius-lg: 12px;
     --radius-xl: 16px;
     --sidebar-width: 240px;
+
+    /* ══ 兼容 ink 模式变量名 ══ */
+    --bg: var(--bg-primary);
+    --bg-card: var(--bg-secondary);
+    --bg-hover: var(--bg-tertiary);
+    --surface: var(--bg-secondary);
+    --surface-alt: var(--bg-tertiary);
+    --paper: var(--bg-secondary);
+    --paper-warm: var(--bg-tertiary);
+    --ink: var(--accent-info);
+    --ink-light: var(--accent-secondary);
+    --ink-dark: #312e81;
+    --amber: var(--accent-warning);
+    --amber-glow: #fbbf24;
+    --gold: #f59e0b;
+    --sage: var(--accent-success);
+    --sage-light: rgba(16, 185, 129, 0.15);
+    --rust: var(--accent-danger);
+    --rust-light: rgba(239, 68, 68, 0.15);
+    --text: var(--text-primary);
+    --text-light: var(--text-secondary);
+    /* --text-muted already matches */
+    --border: var(--border-medium);
+    --border-light: var(--border-subtle);
+    --radius: var(--radius-md);
+    /* --shadow-sm already matches */
+    --shadow: var(--shadow-md);
+    --shadow-lg: var(--shadow-lg);
+    --stat-blue: #60a5fa;
+    --stat-green: #34d399;
+    --stat-amber: #fbbf24;
 }
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1650,6 +1681,19 @@ body::before {
     flex-wrap: wrap;
 }
 
+/* ── 飞吧，朝向春天 称号粉白渐变 ── */
+body.title-飞吧，朝向春天 .profile-title-badge {
+    background: linear-gradient(135deg, #f9a8d4, #fce4ec, #fff5f5) !important;
+    color: #b83280 !important;
+}
+body.title-飞吧，朝向春天 .sidebar-user-title {
+    background: linear-gradient(135deg, #f9a8d4, #fce4ec);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 600;
+}
+
 .profile-stat {
     text-align: center;
     min-width: 50px;
@@ -1949,93 +1993,66 @@ body::before {
    AI Q&A Page — 角色扮演 (Dark Mode)
    ══════════════════════════════════════════════════════════ */
 
-/* ── Top Bar ──────────────────────────────────────── */
+.ai-page-container {
+    display: flex; flex-direction: column;
+    height: calc(100vh - 6rem); max-width: 900px; margin: 0 auto;
+}
+
 .ai-topbar {
-    background: var(--surface);
-    border-color: var(--border);
+    background: var(--surface); border-color: var(--border);
+}
+.ai-topbar-title { color: var(--ink); }
+.ai-topbar-subtitle { color: var(--text-light); }
+.ai-persona-label { color: var(--text); }
+.ai-persona-select {
+    background: var(--bg); color: var(--text); border-color: var(--border);
 }
 
-/* ── Chat Area ────────────────────────────────────── */
 .ai-chat-area {
-    background: var(--surface);
-    border-color: var(--border);
+    background: var(--bg-card); border-color: var(--border);
 }
+.ai-welcome { color: var(--text-light); }
+.ai-welcome h3 { color: var(--ink); }
 
-/* ── Chat Bubbles ─────────────────────────────────── */
 .ai-chat-ai .ai-bubble-content {
-    background: #1e1b1b;
-    border-color: #4a3f1a;
-    color: #e8d5a3;
+    background: var(--bg-tertiary); border-color: var(--border-medium); color: var(--text-primary);
 }
-
 .ai-chat-ai .ai-bubble-avatar {
-    background: #2d2615;
-    border-color: #4a3f1a;
+    background: var(--bg-tertiary); border-color: var(--border-medium);
 }
-
 .ai-chat-user .ai-bubble-content {
     background: var(--bg-hover);
 }
+.ai-bubble-content strong { color: var(--amber); }
 
-.ai-bubble-content strong {
-    color: var(--amber);
-}
-
-/* ── Input Area ───────────────────────────────────── */
+.ai-input-row { display: flex; gap: 8px; }
 .ai-input {
-    background: var(--surface);
-    border-color: var(--border);
-    color: var(--text);
+    background: var(--bg-card); border-color: var(--border); color: var(--text);
 }
-
-.ai-input:focus {
-    border-color: var(--amber);
-}
+.ai-input:focus { border-color: var(--amber); }
+.ai-send-btn { flex-shrink: 0; }
 
 /* ── Inline AI on Detail Page ─────────────────────── */
 .detail-ai-inline {
-    border-color: #4a3f1a;
-    background: #1a1612;
+    border-color: var(--border-medium); background: var(--surface);
 }
-
-.detail-ai-header:hover {
-    background: rgba(245, 158, 11, 0.08);
-}
-
-.detail-ai-body {
-    border-top-color: #4a3f1a;
-}
-
+.detail-ai-header:hover { background: rgba(245,158,11,0.08); }
+.detail-ai-body { border-top-color: var(--border-medium); }
 .detail-ai-msg-ai {
-    background: #1e1b1b;
-    border-color: #4a3f1a;
-    color: #e8d5a3;
+    background: var(--bg-tertiary); border-color: var(--border-medium); color: var(--text-primary);
 }
-
-.detail-ai-msg-user {
-    background: var(--bg-hover);
-}
-
+.detail-ai-msg-user { background: var(--bg-hover); }
 .detail-ai-persona-mini {
-    background: var(--surface);
-    border-color: var(--border);
-    color: var(--text);
+    background: var(--bg); border-color: var(--border); color: var(--text);
 }
-
 .detail-ai-persona-badge {
-    background: var(--bg-hover);
-    color: var(--text-light);
+    background: var(--bg-hover); color: var(--text-light);
 }
-
 .detail-ai-input {
-    background: var(--surface);
-    border-color: var(--border);
-    color: var(--text);
+    background: var(--bg-card); border-color: var(--border); color: var(--text);
 }
-
-.detail-ai-input:focus {
-    border-color: var(--amber);
-}
+.detail-ai-input:focus { border-color: var(--amber); }
+.detail-ai-input-row { display: flex; gap: 8px; }
 
 /* ── Persona Select ───────────────────────────────── */
 .ai-persona-select {
@@ -2077,20 +2094,59 @@ body::before {
    Credit & Gacha System (Dark Mode)
    ══════════════════════════════════════════════════════════ */
 
-.gacha-header { background: var(--surface); border-color: var(--border); }
-.gacha-result { background: var(--surface); border-color: var(--border); }
-.gacha-tab { background: var(--surface); border-color: var(--border); color: var(--text); }
-.frag-card, .deco-card { background: var(--surface); border-color: var(--border); }
-.gacha-pull-card { background: var(--surface); }
-.deco-equipped { background: #2d2615; }
-.gacha-levelup { background: #2d2615; color: var(--amber); }
+.gacha-container { max-width: 800px; margin: 0 auto; }
+.gacha-header {
+    background: var(--surface); border-color: var(--border);
+}
+.gacha-credit-value { color: var(--amber); }
+.gacha-credit-label { color: var(--text-light); }
+.gacha-level-display > span:first-child { color: var(--text); }
+.gacha-level-bar { background: var(--bg-hover); }
+
+.gacha-result {
+    background: var(--bg-card); border-color: var(--border);
+}
+.gacha-levelup {
+    background: linear-gradient(135deg, #3d2e0a, #2d1f06);
+    color: var(--amber);
+}
+.gacha-pull-card {
+    background: var(--bg-card); border-color: var(--border-medium);
+}
+.gacha-pull-type { color: var(--text-light); }
+.gacha-pull-name { color: var(--text); }
+.gacha-pull-frag { color: var(--amber); }
+
+.gacha-tabs { display: flex; gap: 8px; margin: 20px 0 12px; }
+.gacha-tab {
+    background: var(--bg); border-color: var(--border); color: var(--text);
+}
+.gacha-tab.active { background: var(--amber); color: #fff; border-color: var(--amber); }
+
+.frag-card, .deco-card {
+    background: var(--bg-card); border-color: var(--border);
+}
+.frag-type, .deco-type { color: var(--text-muted); }
+.frag-count { color: var(--amber); }
+.frag-info strong { color: var(--text); }
+.deco-equipped { border-color: var(--amber); background: var(--paper-warm); }
 
 /* ===== 小摆件展示区 (dark) ===== */
-/* 小摆件展示区 dark */
-.decoration-shelf { background: #1e1a12; border-color: #454030; }
-.decoration-shelf-header h3 { color: #d5c8a8; }
-.deco-shake-btn { background: #2a2518; color: #c0b080; border-color: #524a30; }
-.deco-shake-btn:hover { background: #b8860b; color: #fff; }
-.decoration-shelf-stage { border-color: #5c4a2e; }
-.decoration-shelf-empty { color: #6b5d48; }
+.decoration-shelf {
+    background: var(--surface); border-color: var(--border);
+}
+.decoration-shelf-header h3 { color: var(--ink); }
+.deco-shake-btn {
+    background: var(--bg-card); color: var(--text); border-color: var(--border);
+}
+.deco-shake-btn:hover { background: var(--amber); color: #fff; border-color: var(--amber); }
+.decoration-shelf-stage {
+    background: linear-gradient(180deg, #1a1410, #120e0a, #0c0806);
+    border-color: #3d3020;
+}
+.decoration-shelf-empty { color: var(--text-muted); }
+.deco-glass {
+    background: rgba(255,255,255,0.04);
+    border-color: var(--border-medium);
+}
 
