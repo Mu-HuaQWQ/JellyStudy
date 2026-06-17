@@ -1773,6 +1773,10 @@ body::before {
     padding: 0.65rem 1rem;
     box-shadow: var(--shadow-sm);
 }
+.profile-user-item.clickable:hover {
+    background: #2a2a40;
+    border-color: #5555aa;
+}
 
 .profile-user-avatar {
     width: 36px; height: 36px;

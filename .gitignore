@@ -38,6 +38,9 @@ docker-build.log
 # Claude
 .claude/
 
+# User uploads
+JellyStudy/uploads/
+
 # External repos
 skills/
 

@@ -270,11 +270,23 @@ public class UserCenterService {
     public Map<String, Object> getProfile(String userId) {
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
-            // 用户不存在于数据库，返回最小化信息
+            // 用户不存在于数据库：从问答记录中查找真实名字
+            String knownName = null;
+            try {
+                List<Question> questions = questionRepository.findByAuthorId(userId);
+                if (questions != null && !questions.isEmpty()) {
+                    String name = questions.get(0).getAuthorName();
+                    if (name != null && !name.isBlank()) {
+                        knownName = name;
+                    }
+                }
+            } catch (Exception ignored) {}
+            if (knownName == null) knownName = "未知用户";
+
             Map<String, Object> profile = new HashMap<>();
             profile.put("id", userId);
-            profile.put("username", userId);
-            profile.put("nickname", userId);
+            profile.put("username", knownName);
+            profile.put("nickname", knownName);
             profile.put("avatar", null);
             profile.put("reputation", 0);
             profile.put("questionCount", 0);

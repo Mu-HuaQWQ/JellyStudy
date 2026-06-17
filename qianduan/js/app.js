@@ -2847,22 +2847,18 @@ function decoShakeAll() {
 async function loadDecorationShelf(forUserId) {
     var targetUserId = forUserId || currentUserId;
     var stage = document.getElementById('decorationShelfStage');
-    var empty = document.getElementById('decorationShelfEmpty');
     if (!stage) return;
+
+    // 不管目标用户有没有摆件，先清掉旧渲染
+    decoStopPhysics();
+    stage.querySelectorAll('.deco-glass').forEach(function(el) { el.remove(); });
+    decoBodies = [];
 
     try {
         var res = await fetchApi('/credits/decorations/' + targetUserId);
-        if (res.code !== 200 || !res.data) { showEmpty(); return; }
+        if (res.code !== 200 || !res.data) { return; }
         var decorations = res.data.filter(function(d) { return d.itemType === 'DECORATION'; });
-        if (decorations.length === 0) { showEmpty(); return; }
-
-        empty.style.display = 'none';
-
-        // 停止旧物理
-        decoStopPhysics();
-        // 清除旧元素和刚体
-        stage.querySelectorAll('.deco-glass').forEach(function(el) { el.remove(); });
-        decoBodies = [];
+        if (decorations.length === 0) { return; }
 
         // 按数量为每个装饰创建刚体（每个数量 = 一个物理实例）
         decorations.forEach(function(d) {
@@ -2887,11 +2883,6 @@ async function loadDecorationShelf(forUserId) {
         }
     } catch(e) {
         console.error('加载摆件失败:', e);
-        showEmpty();
-    }
-
-    function showEmpty() {
-        if (empty) empty.style.display = '';
     }
 }
 
@@ -3060,10 +3051,10 @@ async function loadProfileFollowing() {
         container.innerHTML = `
             <div class="profile-item-list">
                 ${list.map(u => `
-                    <div class="profile-user-item">
+                    <div class="profile-user-item clickable" onclick="viewUserProfile('${u.id}')" style="cursor:pointer;">
                         ${renderProfileUserAvatar(u)}
                         <span class="profile-user-name">${escapeHtml(u.nickname || u.username)}</span>
-                        <button class="profile-user-action" onclick="unfollowUser('${u.id}')">取消关注</button>
+                        <button class="profile-user-action" onclick="event.stopPropagation();unfollowUser('${u.id}')">取消关注</button>
                     </div>
                 `).join('')}
             </div>`;
@@ -3088,7 +3079,7 @@ async function loadProfileFollowers() {
         container.innerHTML = `
             <div class="profile-item-list">
                 ${list.map(u => `
-                    <div class="profile-user-item">
+                    <div class="profile-user-item clickable" onclick="viewUserProfile('${u.id}')" style="cursor:pointer;">
                         ${renderProfileUserAvatar(u)}
                         <span class="profile-user-name">${escapeHtml(u.nickname || u.username)}</span>
                         <span style="font-size:0.78rem;color:var(--text-muted);">${u.reputation || 0} 贡献点</span>
