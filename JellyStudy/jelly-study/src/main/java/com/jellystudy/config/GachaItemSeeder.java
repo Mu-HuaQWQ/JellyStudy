@@ -33,6 +33,8 @@ public class GachaItemSeeder implements CommandLineRunner {
         Map.entry("bg_bamboo",            new String[]{"竹林背景", "BACKGROUND", "EPIC",     "5",  "幽静竹林主题背景"}),
         Map.entry("bg_galaxy",            new String[]{"银河背景", "BACKGROUND", "LEGENDARY","10", "浩瀚银河主题背景"}),
         Map.entry("bg_aurora",            new String[]{"极光背景", "BACKGROUND", "MYTHIC",   "20", "梦幻极光主题背景"}),
+        Map.entry("bg_pixel_world",      new String[]{"像素世界", "BACKGROUND", "LEGENDARY","10", "复古像素世界背景"}),
+        Map.entry("bg_sketch",            new String[]{"手绘背景", "BACKGROUND", "EPIC",     "5",  "温馨手绘风格背景"}),
         // 聊天框类
         Map.entry("chatbox_simple",       new String[]{"简约边框", "CHATBOX", "COMMON",   "1",  "简约聊天框边框"}),
         Map.entry("chatbox_flower",       new String[]{"花藤边框", "CHATBOX", "RARE",     "3",  "花藤缠绕聊天框"}),

@@ -165,6 +165,91 @@ body.bg-银河背景 {
     --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
 }
 
+/* ── 手绘背景 (Sketchbook) ── */
+body.bg-手绘背景 {
+    background: #f5f0e8 !important;
+    /* 笔记纸纹理：横线 + 左边红线 + 纸张噪点 */
+    background-image:
+        linear-gradient(#e8dcc8 1px, transparent 1px),
+        linear-gradient(90deg, #f0c0b0 1px, transparent 1px),
+        repeating-linear-gradient(0deg, transparent, transparent 23px, #e0d8c8 23px, #e0d8c8 24px),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    background-size: 100% 100%, 2px 100%, 100% 24px, 200px 200px;
+    --bg: #f5f0e8;
+    --bg-card: #faf7f2;
+    --bg-hover: #efe8dc;
+    --surface: #faf7f2;
+    --surface-alt: #f2ece0;
+    --paper: #f5f0e8;
+    --paper-warm: #efe6d8;
+    --text: #3a3028;
+    --text-muted: #7a6e60;
+    --text-light: #a09888;
+    --border: #d8cebc;
+    --border-light: #e5dcc8;
+    --ink: #4a3828;
+    --ink-light: #6a5040;
+    --ink-dark: #2a1808;
+    --amber: #c87830;
+    --amber-glow: #d89040;
+    --gold: #b88830;
+    --sage: #5a7a50;
+    --sage-light: #e8f0e0;
+    --rust: #b84030;
+    --rust-light: #f8e0d8;
+    --shadow-sm: 0 1px 3px rgba(50,40,30,0.06);
+    --shadow: 0 2px 12px rgba(50,40,30,0.08);
+    --shadow-lg: 0 8px 32px rgba(50,40,30,0.10);
+}
+
+/* ── 像素世界 (Pixel World) ── */
+body.bg-像素世界 {
+    background-color: #1a1a2e !important;
+    /* CRT 像素网格 */
+    background-image:
+        linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px),
+        linear-gradient(rgba(0,0,0,0.15) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px),
+        radial-gradient(circle at 30% 20%, rgba(0,255,136,0.06) 0%, transparent 50%),
+        radial-gradient(circle at 70% 60%, rgba(255,102,170,0.05) 0%, transparent 50%),
+        radial-gradient(circle at 50% 80%, rgba(0,221,255,0.05) 0%, transparent 50%);
+    background-size:
+        4px 4px,
+        4px 4px,
+        2px 2px,
+        60px 60px,
+        100% 100%,
+        100% 100%,
+        100% 100%;
+    background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0;
+    --bg: #1a1a2e;
+    --bg-card: #222240;
+    --bg-hover: #2a2a50;
+    --surface: #222240;
+    --surface-alt: #282848;
+    --paper: #222240;
+    --paper-warm: #282848;
+    --text: #e0e8f0;
+    --text-muted: #8899bb;
+    --text-light: #667799;
+    --border: #334466;
+    --border-light: #2a3855;
+    --ink: #00ff88;
+    --ink-light: #44ffaa;
+    --ink-dark: #00cc66;
+    --amber: #ffcc00;
+    --amber-glow: #ffdd44;
+    --gold: #ffbb00;
+    --sage: #00ddff;
+    --sage-light: #152530;
+    --rust: #ff66aa;
+    --rust-light: #251525;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+    --shadow: 0 2px 12px rgba(0,0,0,0.35);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.45);
+}
+
 /* ── 极光背景 (Aurora) ── */
 body.bg-极光背景 {
     background: linear-gradient(135deg, #0d1b2a, #1b2838, #1a3a4a, #2d5a5a) !important;

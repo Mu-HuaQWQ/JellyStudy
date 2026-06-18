@@ -465,7 +465,7 @@ function renderQuestionDetail(data) {
                 <div class="detail-ai-inline" id="detail-ai-inline">
                     <div class="detail-ai-header" onclick="toggleDetailAi()">
                         <div class="detail-ai-header-left">
-                            <span>🤖</span>
+                            <span></span>
                             <strong>AI 快速问答</strong>
                             <span class="detail-ai-persona-badge" id="detail-ai-persona-badge">老师</span>
                         </div>
@@ -1223,7 +1223,7 @@ async function sendAiQuestion() {
     const aiMsg = document.createElement('div');
     aiMsg.className = 'ai-chat-bubble ai-chat-ai';
     aiMsg.id = 'ai-loading-msg';
-    aiMsg.innerHTML = '<div class="ai-bubble-avatar">🤖</div><div class="ai-bubble-content"><p>正在思考...</p></div>';
+    aiMsg.innerHTML = '<div class="ai-bubble-avatar"></div><div class="ai-bubble-content"><p>正在思考...</p></div>';
     chatArea.appendChild(aiMsg);
 
     // 清空输入
@@ -1245,7 +1245,7 @@ async function sendAiQuestion() {
         const answerMsg = document.createElement('div');
         answerMsg.className = 'ai-chat-bubble ai-chat-ai';
         const answerText = (res.code === 200 && res.data) ? res.data : ('AI回答失败: ' + (res.message || '未知错误'));
-        answerMsg.innerHTML = '<div class="ai-bubble-avatar">🤖</div><div class="ai-bubble-content">' + formatAiContent(answerText) + '</div>';
+        answerMsg.innerHTML = '<div class="ai-bubble-avatar"></div><div class="ai-bubble-content">' + formatAiContent(answerText) + '</div>';
         chatArea.appendChild(answerMsg);
         chatArea.scrollTop = chatArea.scrollHeight;
     } catch (error) {
@@ -1254,7 +1254,7 @@ async function sendAiQuestion() {
 
         const errMsg = document.createElement('div');
         errMsg.className = 'ai-chat-bubble ai-chat-ai';
-        errMsg.innerHTML = '<div class="ai-bubble-avatar">🤖</div><div class="ai-bubble-content"><p>请求失败: ' + escapeHtml(error.message) + '</p></div>';
+        errMsg.innerHTML = '<div class="ai-bubble-avatar"></div><div class="ai-bubble-content"><p>请求失败: ' + escapeHtml(error.message) + '</p></div>';
         chatArea.appendChild(errMsg);
         chatArea.scrollTop = chatArea.scrollHeight;
     }
@@ -1309,7 +1309,7 @@ async function sendDetailAiQuestion() {
     const loadingDiv = document.createElement('div');
     loadingDiv.className = 'detail-ai-msg detail-ai-msg-ai';
     loadingDiv.id = 'detail-ai-loading';
-    loadingDiv.innerHTML = '<strong>🤖 AI：</strong>正在思考...';
+    loadingDiv.innerHTML = '<strong> AI：</strong>正在思考...';
     body.appendChild(loadingDiv);
 
     input.value = '';
@@ -1327,7 +1327,7 @@ async function sendDetailAiQuestion() {
         const answerDiv = document.createElement('div');
         answerDiv.className = 'detail-ai-msg detail-ai-msg-ai';
         const text = (res.code === 200 && res.data) ? res.data : ('失败: ' + (res.message || ''));
-        answerDiv.innerHTML = '<strong>🤖 AI：</strong>' + formatAiContent(text);
+        answerDiv.innerHTML = '<strong> AI：</strong>' + formatAiContent(text);
         body.appendChild(answerDiv);
         body.scrollTop = body.scrollHeight;
     } catch (error) {
@@ -1335,7 +1335,7 @@ async function sendDetailAiQuestion() {
         if (loadingEl) loadingEl.remove();
         const errDiv = document.createElement('div');
         errDiv.className = 'detail-ai-msg detail-ai-msg-ai';
-        errDiv.innerHTML = '<strong>🤖 AI：</strong>请求失败: ' + escapeHtml(error.message);
+        errDiv.innerHTML = '<strong> AI：</strong>请求失败: ' + escapeHtml(error.message);
         body.appendChild(errDiv);
     }
 }
@@ -1407,7 +1407,7 @@ async function loadQbQuestions() {
             renderQbQuestions(res.data);
             document.getElementById('qbCount').textContent = res.data.length + ' 道题目';
         } else {
-            container.innerHTML = '<p class="empty-state">暂无题目，点击"🤖 AI 生成"创建题目</p>';
+            container.innerHTML = '<p class="empty-state">暂无题目，点击" AI 生成"创建题目</p>';
         }
     } catch (e) {
         container.innerHTML = '<p class="error-state">加载失败</p>';
@@ -1493,7 +1493,7 @@ async function generateQuestions() {
     } catch (e) {
         alert('请求失败：' + e.message);
     }
-    btn.textContent = '🤖 AI 生成';
+    btn.textContent = ' AI 生成';
     btn.disabled = false;
 }
 
@@ -2643,9 +2643,20 @@ async function loadProfile() {
         document.getElementById('profileFollowers').textContent = p.followerCount || 0;
         document.getElementById('profileQuestions').textContent = p.questionCount || 0;
         document.getElementById('profileAnswers').textContent = p.answerCount || 0;
+        document.getElementById('profileCredits').textContent = p.creditPoints || 0;
+        document.getElementById('profileLevel').textContent = 'Lv' + (p.level || 0);
 
         // 展示台始终加载
         loadDecorationShelf(targetUserId);
+
+        // 更新 body 上的称号 class（看别人时也要切）
+        var bodyCls = document.body.className.split(/\s+/);
+        for (var i = bodyCls.length - 1; i >= 0; i--) {
+            if (bodyCls[i].startsWith('title-')) document.body.classList.remove(bodyCls[i]);
+        }
+        if (p.displayTitle && p.displayTitle !== 'newbie') {
+            document.body.classList.add('title-' + p.displayTitleName);
+        }
 
         // 看自己时才加载 tab 和信用
         if (isSelf) {
@@ -3116,7 +3127,8 @@ async function unfollowUser(targetId) {
 
 async function loadProfileHeaderStats() {
     try {
-        const res = await fetchApi(`/users/${currentUserId}/profile`);
+        var targetUserId = viewedUserId || currentUserId;
+        const res = await fetchApi(`/users/${targetUserId}/profile`);
         if (res.code === 200) {
             const p = res.data;
             document.getElementById('profileFollowing').textContent = p.followingCount || 0;

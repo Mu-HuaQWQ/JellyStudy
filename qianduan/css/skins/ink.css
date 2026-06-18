@@ -3,7 +3,7 @@
    Sidebar navigation + two-column layouts
    ═══════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,500&family=Noto+Serif+SC:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,500&family=Noto+Serif+SC:wght@400;600;700&family=JetBrains+Mono:wght@400;500&family=Press+Start+2P&family=Caveat:wght@500;700&display=swap');
 
 /* ── Variables ─────────────────────────────────────── */
 :root {
@@ -2302,7 +2302,7 @@ body::before {
 }
 
 .profile-title-badge {
-    background: linear-gradient(135deg, var(--gold), var(--amber));
+    background: linear-gradient(135deg, #c9a44b, #c87d3e);
     color: #fff;
     padding: 2px 12px;
     border-radius: 20px;
@@ -3142,6 +3142,45 @@ body::before {
 /* ══════════════════════════════════════════════════════════
    Equippable Backgrounds — now in base.css with full theming
    ══════════════════════════════════════════════════════════ */
+
+/* ── 手绘背景 字体 ── */
+body.bg-手绘背景,
+body.bg-手绘背景 input,
+body.bg-手绘背景 button,
+body.bg-手绘背景 textarea,
+body.bg-手绘背景 select {
+    font-family: 'Caveat', 'Noto Serif SC', cursive, serif !important;
+    font-size: 1.05em;
+}
+body.bg-手绘背景 .sidebar-logo {
+    font-family: 'Caveat', 'Noto Serif SC', cursive, serif !important;
+    font-size: 1.6rem !important;
+}
+body.bg-手绘背景 .sidebar-nav a,
+body.bg-手绘背景 .sidebar-user-name {
+    font-family: 'Caveat', 'Noto Serif SC', cursive, serif !important;
+    font-size: 0.95rem !important;
+}
+
+/* ── 像素世界 字体 ── */
+body.bg-像素世界,
+body.bg-像素世界 input,
+body.bg-像素世界 button,
+body.bg-像素世界 textarea,
+body.bg-像素世界 select {
+    font-family: 'Press Start 2P', 'Courier New', monospace !important;
+    letter-spacing: -0.5px;
+    word-spacing: -2px;
+}
+body.bg-像素世界 .sidebar-logo {
+    font-family: 'Press Start 2P', 'Courier New', monospace !important;
+    font-size: 0.9rem !important;
+}
+body.bg-像素世界 .sidebar-nav a,
+body.bg-像素世界 .sidebar-user-name {
+    font-family: 'Press Start 2P', 'Courier New', monospace !important;
+    font-size: 0.55rem !important;
+}
 
 /* ══════════════════════════════════════════════════════════
    Equippable Titles

@@ -295,6 +295,8 @@ public class UserCenterService {
             profile.put("followerCount", 0);
             profile.put("displayTitle", "newbie");
             profile.put("displayTitleName", "新人");
+            profile.put("creditPoints", 0);
+            profile.put("level", 0);
             return profile;
         }
         // 合并内置称号 + 抽卡称号
@@ -339,6 +341,8 @@ public class UserCenterService {
         profile.put("followerCount", user.getFollowerCount() == null ? 0 : user.getFollowerCount());
         profile.put("displayTitle", displayTitle);
         profile.put("displayTitleName", displayTitleName);
+        profile.put("creditPoints", user.getCreditPoints() == null ? 0 : user.getCreditPoints());
+        profile.put("level", user.getLevel() == null ? 0 : user.getLevel());
         return profile;
     }
 }
